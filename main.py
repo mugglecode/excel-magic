@@ -1,7 +1,7 @@
-from Document import create_document
-from dataset import Dataset
-from utils import Document
-import splitter
+from excelMagic.Document import create_document
+from excelMagic.dataset import Dataset
+from excelMagic.utils import Document
+
 
 def callback(content):
     return content['name'] == '小明'

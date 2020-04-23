@@ -1,4 +1,4 @@
-import splitter
+from excelMagic import splitter
 import xlrd
 
 
