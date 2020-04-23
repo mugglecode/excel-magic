@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-        name='excel-magic',
+        name='excelMagic',
         version='1.0.0',
         packages=[''],
         url='https://github.com/guo40020/excel-magic',
