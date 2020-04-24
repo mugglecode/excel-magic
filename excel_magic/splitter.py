@@ -1,7 +1,6 @@
 import xlrd
 import xlsxwriter
 import os
-from excel_magic.Excel import Pointer
 
 
 def split_sheets(path: str, out: str = '', out_prefix: str = ''):
