@@ -118,6 +118,9 @@ class ExcelDocument:
     def close(self):
         self.xlsxDocument.close()
 
+    def get_sheet(self, index: int) -> MagicSheet:
+        return self.magicSheets[index]
+
     def get_raw_sheets(self):
         result = []
         for s in self.magicSheets:
