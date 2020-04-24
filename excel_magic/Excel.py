@@ -105,7 +105,7 @@ class ExcelDocument:
                 m_sheet = MagicSheet(key.name, key)
                 m_sheet.headers = headers[key]
             # write to the empty book
-            self.append(template)
+            self.merge(template)
 
         elif isinstance(template, dict):
             # create sheets
@@ -127,7 +127,7 @@ class ExcelDocument:
             result.append(s.raw_sheet)
         return result
 
-    def append(self, path: str) -> None:
+    def merge(self, path: str) -> None:
         """
         add another document to the current this document
         :param path: path of the document

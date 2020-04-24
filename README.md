@@ -13,14 +13,10 @@ sheet = doc.get_sheet(0)
 # add a row
 sheet.append_row([1. 'John Doe', 18])
 # append another file
-doc.append('file_to_append.xlsx')
+doc.merge('file_to_append.xlsx')
 # close and save
 doc.close()
 ```
-
-
-
-
 
 ## API Reference
 
@@ -34,7 +30,7 @@ doc.close()
 
 ### ExcelDocument
 
-- append(path) -> None
+- merge(path) -> None
   
   - append another file to your document
 
@@ -45,16 +41,12 @@ doc.close()
 - close() -> None
   
   - close and save
-    
-    
 
 ### MagicSheet
 
 - append\_row(content: Union[Dict, List[str]])
   
   - append one new row
-  
-  
 
 ## dataset Module
 
@@ -83,8 +75,6 @@ doc.close()
 - remove(row: dict)
   
   - remove a row
-  
-  
 
 ## utils Module
 
@@ -97,5 +87,3 @@ doc.close()
 - split\_rows(row\_count: int, out='', out\_prefix='')
   
   - split file by rows
-
-
