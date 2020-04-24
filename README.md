@@ -9,7 +9,7 @@ Do magic to your excel file!
 from excel_magic import Excel
 doc = Excel.create_document('/path/to/your/file.xlsx', {"Sheet1": ['id', 'name', 'age']})
 # get your first sheet
-sheet = doc.magicSheets[0]
+sheet = doc.get_sheet(0)
 # add a row
 sheet.append_row([1. 'John Doe', 18])
 # append another file
