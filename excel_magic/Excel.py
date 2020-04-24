@@ -1,7 +1,7 @@
 import xlrd
 import xlsxwriter
 import datetime
-import dataset
+from dataset import Dataset
 from typing import List, Union, Dict
 
 __all__ = ['Pointer', 'MagicSheet', 'ExcelDocument']
@@ -81,7 +81,7 @@ def create_document(path: str, template: Union[str, Dict]):
 
 
 def open(path: str):
-    return dataset.Dataset(path)
+    return Dataset(path)
 
 
 class ExcelDocument:
