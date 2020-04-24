@@ -45,7 +45,7 @@ class MagicSheet:
     def _add_row(self):
         self.rows += 1
 
-    def append_row(self, content: Union[Dict[str: str], List[str]]):
+    def append_row(self, content: Union[Dict, List[str]]):
         """
         append data to current sheet
         :param content: a dict{header: content} or a list [content]
@@ -62,13 +62,13 @@ class MagicSheet:
                 self.raw_sheet.write(self.rows, i, content[i])
             self._add_row()
         else:
-            raise TypeError(f'Expected dict or list, got {type(content)} instead')
+            raise TypeError(f'Expected dict or list, got {str(type(content))} instead')
 
     def __str__(self):
         return self.name
 
 
-def create_document(path: str, template: Union[str, Dict[str: List[str]]]):
+def create_document(path: str, template: Union[str, Dict]):
     """
     Create a new xlsx document
     :param path: path of the new document
@@ -81,7 +81,7 @@ def create_document(path: str, template: Union[str, Dict[str: List[str]]]):
 
 class ExcelDocument:
 
-    def __init__(self, path: str, template: Union[str, Dict[str: List[str]]]):
+    def __init__(self, path: str, template: Union[str, Dict]):
         """
         Create a new xlsx document
         :param path: path of the new document
@@ -108,7 +108,7 @@ class ExcelDocument:
                 m_sheet = self.add_sheet(key, template[key])
                 self.magicSheets.append(m_sheet)
         else:
-            raise TypeError(f'Expected str or dict, got {type(template)} instead')
+            raise TypeError(f'Expected str or dict, got {str(type(template))} instead')
 
     def close(self):
         self.xlsxDocument.close()
@@ -168,7 +168,7 @@ class ExcelDocument:
         else:
             return None
 
-    def _get_header(self, path: str) -> Dict[xlrd.sheet.Sheet: List[str]]:
+    def _get_header(self, path: str) -> Dict:
         result = {}
         workbook = xlrd.open_workbook(path)
         sheet: xlrd.sheet.Sheet
