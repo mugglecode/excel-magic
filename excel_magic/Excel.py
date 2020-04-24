@@ -1,9 +1,9 @@
 import xlrd
 import xlsxwriter
 import datetime
-from typing import List, Union
+from typing import List, Union, Dict
 
-__all__ = ['Pointer', 'SheetInfo', 'create_document']
+__all__ = ['Pointer', 'MagicSheet', 'ExcelDocument']
 
 XL_CELL_EMPTY = 0
 XL_CELL_TEXT = 1
@@ -19,35 +19,61 @@ class Pointer:
         self.row = row
         self.col = col
 
-    def next_row(self, current_col=False):
+    def _next_row(self, current_col=False):
         if not current_col:
             self.col = 0
         self.row += 1
 
-    def next_col(self):
+    def _next_col(self):
         self.col += 1
 
 
-class SheetInfo:
+class MagicSheet:
+    """
+    Do not initialize this class yourself
+    """
     def __init__(self, name, sheet):
         self.name = name
         self.cols = 0
         self.rows = 0
-        self.sheet = sheet
+        self.raw_sheet = sheet
+        self.headers = []
 
-    def add_col(self):
+    def _add_col(self):
         self.cols += 1
 
-    def add_row(self):
+    def _add_row(self):
         self.rows += 1
+
+    def append(self, content: Union[Dict[str: str], List[str]]):
+        """
+        append data to current sheet
+        :param content: a dict{header: content} or a list [content]
+        :return: None
+        """
+        if isinstance(content, dict):
+            # is a dict
+            for i in range(self.headers.__len__()):
+                pass  # TODO
 
     def __str__(self):
         return self.name
 
 
-class create_document:
+def create_document(path: str, template: Union[str, Dict[str: List[str]]]):
+    """
+    Create a new xlsx document
+    :param path: path of the new document
+    :param template: a file template or a header
+    :return: an ExcelDocument object
 
-    def __init__(self, path: str):
+    """
+    return ExcelDocument(path, template)
+
+
+class ExcelDocument:
+
+    def __init__(self, path: str, template: Union[str, Dict[str: List[str]]]):
         """
         Create a new xlsx document
         :param path: path of the new document
@@ -55,10 +81,33 @@ class create_document:
         self.file: str = path
         self.pointer: Pointer = Pointer(0, 0)
         self.xlsxDocument: xlsxwriter.Workbook = xlsxwriter.Workbook(path)
-        self.sheet_info: List[SheetInfo] = []
+        self.magicSheets: List[MagicSheet] = []
+
+        # init sheet
+        if isinstance(template, str):
+            # using file template
+            # get headers
+            headers = self._get_header(template)
+            for key in headers.keys():
+                m_sheet = MagicSheet(key.name, key)
+                m_sheet.headers = headers[key]
+            # write to the empty book
+            self.append(template)
+
+        elif isinstance(template, dict):
+            # create sheets
+            for key in template.keys():
+                m_sheet = self.add_sheet(key, template[key])
+                self.magicSheets.append(m_sheet)
 
     def close(self):
         self.xlsxDocument.close()
+
+    def get_raw_sheets(self):
+        result = []
+        for s in self.magicSheets:
+            result.append(s.raw_sheet)
+        return result
 
     def append(self, path: str) -> None:
         """
@@ -73,26 +122,52 @@ class create_document:
             if sheet_info is not None:
                 # add to sheet
                 self.pointer = Pointer(sheet_info.rows, 0)
-                self._write_sheet(sheet, workbook, sheet_info, sheet_info.sheet)
+                self._write_sheet(sheet, workbook, sheet_info, sheet_info.raw_sheet)
             else:
                 # create new sheet
                 self.pointer = Pointer(0, 0)
                 new_sheet = self.xlsxDocument.add_worksheet(sheet.name)
-                sheet_info = SheetInfo(sheet.name, new_sheet)
-                self.sheet_info.append(sheet_info)
+                sheet_info = MagicSheet(sheet.name, new_sheet)
+                self.magicSheets.append(sheet_info)
                 self._write_sheet(sheet, workbook, sheet_info, new_sheet)
 
-    def _get_sheet(self, sheet_name) -> Union[SheetInfo, None]:
+    def add_sheet(self, name, header: List[str]):
+        """
+        add a new sheet
+        :param name: name of the sheet
+        :param header: headers of the sheet
+        :return:
+        """
+        if self._get_sheet(name) is None:
+            sheet = self.xlsxDocument.add_worksheet(name)
+            m_sheet = MagicSheet(name ,sheet)
+            for i in range(header.__len__()):
+                sheet.write_string(0, i, header[i])
+                m_sheet.headers.append(header[i])
+            return m_sheet
+
+    def _get_sheet(self, sheet_name) -> Union[MagicSheet, None]:
         """
         Get SheetInfo instance if it exists in self.sheets
         :param sheet_name: name of a sheet
         :return: SheetInfo if exists, None if not
         """
-        for s in self.sheet_info:
+        for s in self.magicSheets:
             if s.name == sheet_name:
                 return s
         else:
             return None
+
+    def _get_header(self, path: str) -> Dict[xlrd.sheet.Sheet: List[str]]:
+        result = {}
+        workbook = xlrd.open_workbook(path)
+        sheet: xlrd.sheet.Sheet
+        for sheet in workbook.sheets():
+            headers = []
+            for cell in sheet.row(0):
+                headers.append(cell.value)
+            result[sheet] = headers
+        return result
 
     def _write_sheet(self, sheet, workbook, sheet_info, this_sheet):
         for row in sheet.get_rows():
@@ -116,8 +191,8 @@ class create_document:
 
                 else:
                     this_sheet.write(self.pointer.row, self.pointer.col, cell.value)
-                self.pointer.next_col()
-                sheet_info.add_col()
+                self.pointer._next_col()
+                sheet_info._add_col()
 
-            sheet_info.add_row()
-            self.pointer.next_row()
+            sheet_info._add_row()
+            self.pointer._next_row()

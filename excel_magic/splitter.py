@@ -43,8 +43,8 @@ def split_rows(path: str, row_count: int, out: str = '', out_prefix: str = ''):
     for row in sheet.get_rows():
         for cell in row:
             current_sheet.write(sheet_pointer.row, sheet_pointer.col, cell.value)
-            sheet_pointer.next_col()
-            original_pointer.next_col()
+            sheet_pointer._next_col()
+            original_pointer._next_col()
 
         if sheet_pointer.row == row_count - 1:
             sheet_pointer = Pointer(0, 0)
@@ -53,6 +53,6 @@ def split_rows(path: str, row_count: int, out: str = '', out_prefix: str = ''):
             current_workbook = xlsxwriter.Workbook(os.path.join(out, out_prefix) + str(file_counter) + '.xlsx')
             current_sheet = current_workbook.add_worksheet(sheet.name)
         else:
-            sheet_pointer.next_row()
-        original_pointer.next_row()
+            sheet_pointer._next_row()
+        original_pointer._next_row()
     current_workbook.close()
