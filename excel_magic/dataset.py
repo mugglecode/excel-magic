@@ -1,6 +1,7 @@
 import xlrd
 from typing import Callable, Union, List
 
+__all__ = ['Table', 'Dataset']
 
 class Table:
 

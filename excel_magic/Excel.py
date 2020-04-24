@@ -3,6 +3,8 @@ import xlsxwriter
 import datetime
 from typing import List, Union
 
+__all__ = ['Pointer', 'SheetInfo', 'create_document']
+
 XL_CELL_EMPTY = 0
 XL_CELL_TEXT = 1
 XL_CELL_NUMBER = 2

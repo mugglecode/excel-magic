@@ -1,6 +1,7 @@
-from excelMagic import splitter
+from excel_magic import splitter
 import xlrd
 
+__all__ = ['Document']
 
 class Document:
 
