@@ -69,7 +69,7 @@ class create_document:
         workbook = xlrd.open_workbook(path, formatting_info=True)
         sheet: xlrd.sheet.Sheet
         for sheet in workbook.sheets():
-            sheet_info = self.get_sheet(sheet.name)
+            sheet_info = self._get_sheet(sheet.name)
             if sheet_info is not None:
                 # add to sheet
                 self.pointer = Pointer(sheet_info.rows, 0)
@@ -82,7 +82,7 @@ class create_document:
                 self.sheet_info.append(sheet_info)
                 self._write_sheet(sheet, workbook, sheet_info, new_sheet)
 
-    def get_sheet(self, sheet_name) -> Union[SheetInfo, None]:
+    def _get_sheet(self, sheet_name) -> Union[SheetInfo, None]:
         """
         Get SheetInfo instance if it exists in self.sheets
         :param sheet_name: name of a sheet
