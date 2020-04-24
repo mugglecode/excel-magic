@@ -27,15 +27,15 @@ class Table:
         self.fields = []
         self.data_rows: List[dict] = []
         self.name = sheet.name
-        self.init_fields(sheet)
-        self.init_data(sheet)
+        self._init_fields(sheet)
+        self._init_data(sheet)
 
-    def init_fields(self, sheet: xlrd.sheet.Sheet):
+    def _init_fields(self, sheet: xlrd.sheet.Sheet):
         fields_row = sheet.row(0)
         for field in fields_row:
             self.fields.append(field.value)
 
-    def init_data(self, sheet: xlrd.sheet.Sheet):
+    def _init_data(self, sheet: xlrd.sheet.Sheet):
         flg_first_row = True
         for row in sheet.get_rows():
             # skip the first row
@@ -66,6 +66,16 @@ class Table:
             else:
                 result.append(data_row)
         return result
+
+    def filter(self, callback: Callable[[dict], Union[None, bool]]):
+        data_list = []
+
+        for row in self.data_rows:
+            result = callback(row)
+            if bool(result):
+                data_list.append(row)
+
+        return data_list
 
     def append(self, content: dict):
         new_row = {}
@@ -99,17 +109,8 @@ class Dataset:
             self.tables.append(Table(sheet))
             self.workbook.unload_sheet(sheet.name)
 
-    def filter(self, callback: Callable[[dict], Union[None, bool]], table: int=0) -> List[dict]:
-        data_list = []
-
-        table = self.tables[table]
-
-        for row in table.data_rows:
-            result = callback(row)
-            if bool(result):
-                data_list.append(row)
-
-        return data_list
+    def filter(self, table: Table, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
+        return table.filter(callback)
 
     def find(self, table: Table, **kwargs):
         result = table.find(**kwargs)
