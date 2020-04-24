@@ -34,7 +34,7 @@ doc.close()
   
   - append another file to your document
 
-- `add\_sheet(name: str, header: list[str]) -> MagicSheet`
+- `add_sheet(name: str, header: list[str]) -> MagicSheet`
   
   - add a sheet to your file
 
@@ -44,7 +44,7 @@ doc.close()
 
 ### MagicSheet
 
-- `append\_row(content: Union[Dict, List[str]])`
+- `append_row(content: Union[Dict, List[str]])`
   
   - append one new row
 
@@ -58,7 +58,7 @@ doc.close()
 
 ### Table
 
-- `find(\*\*kwargs)`
+- `find(**kwargs)`
   
   - find a list of rows
 
@@ -78,11 +78,11 @@ doc.close()
 
 ### Document
 
-- `split\_sheets(out='', out\_prefix='')`
+- `split_sheets(out='', out_prefix='')`
   
   - split file by sheets
 
-- `split\_rows(row\_count: int, out='', out\_prefix='')`
+- `split_rows(row_count: int, out='', out_prefix='')`
   
   - split file by rows
 
