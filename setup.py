@@ -9,5 +9,7 @@ setup(
         license='MIT',
         author='Kelly',
         author_email='',
-        description=''
+        description='',
+        install_requires=['xlrd', 'XlsxWriter'],
+        python_requires='>3.6'
 )
