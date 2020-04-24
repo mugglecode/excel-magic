@@ -1,7 +1,7 @@
 import xlrd
 import xlsxwriter
 import datetime
-from dataset import Dataset
+from excel_magic.dataset import Dataset
 from typing import List, Union, Dict
 
 __all__ = ['Pointer', 'MagicSheet', 'ExcelDocument']
