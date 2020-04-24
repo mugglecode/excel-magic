@@ -24,27 +24,27 @@ doc.close()
 
 ### Excel module
 
-- create_document(path, template) -> ExcelDocument
+- `create_document(path, template) -> ExcelDocument`
 
-- open(path) -> Dataset
+- `open(path) -> Dataset`
 
 ### ExcelDocument
 
-- merge(path) -> None
+- `merge(path) -> None`
   
   - append another file to your document
 
-- add\_sheet(name: str, header: list[str]) -> MagicSheet
+- `add\_sheet(name: str, header: list[str]) -> MagicSheet`
   
   - add a sheet to your file
 
-- close() -> None
+- `close() -> None`
   
   - close and save
 
 ### MagicSheet
 
-- append\_row(content: Union[Dict, List[str]])
+- `append\_row(content: Union[Dict, List[str]])`
   
   - append one new row
 
@@ -52,27 +52,25 @@ doc.close()
 
 ### Dataset
 
-- save()
+- `save()`
   
   - save your stuff
 
-- 
-
 ### Table
 
-- find(\*\*kwargs)
+- `find(\*\*kwargs)`
   
   - find a list of rows
 
-- filter(callback)
+- `filter(callback)`
   
   - return a list of rows, filter by the callback function. return True if you want it
 
-- append(content: dict)
+- `append(content: dict)`
   
   - add a row to your file, dict keys should be your headers
 
-- remove(row: dict)
+- `remove(row: dict)`
   
   - remove a row
 
@@ -80,10 +78,35 @@ doc.close()
 
 ### Document
 
-- split\_sheets(out='', out\_prefix='')
+- `split\_sheets(out='', out\_prefix='')`
   
   - split file by sheets
 
-- split\_rows(row\_count: int, out='', out\_prefix='')
+- `split\_rows(row\_count: int, out='', out\_prefix='')`
   
   - split file by rows
+
+# Use Cases
+
+## CRUD using Dataset
+
+let's say we have a file like this:
+
+| id  | name     | age |
+| --- | -------- | --- |
+| 1   | John Doe | 12  |
+| 2   | Kelly    | 18  |
+
+```python
+ds = Dataset('a_file.xlsx')
+table = ds.get_table(0)
+search_results = table.find(name='John Doe')
+table.remove(search_results[0])
+search_results[1]['name'] = 'Vicky'
+# we can have leave age empty if we do it like this!
+table.append({'id': '3', 'name': 'Dick'})
+# we can use filter if we have even more complex conditions
+table.filter(lambda row: row['age'] is '')
+# don't forget to save!
+table.save()
+```

@@ -95,6 +95,9 @@ class Dataset:
     # TODO: content.id
 
     def __init__(self, path: str):
+        if not os.path.isfile(path):
+            wb = xlsxwriter.Workbook(path)
+            wb.close()
         self.workbook = xlrd.open_workbook(path, on_demand=True)
         self.tables = []
         self.filename = os.path.basename(path)
@@ -108,6 +111,9 @@ class Dataset:
                 continue
             self.tables.append(Table(sheet))
             self.workbook.unload_sheet(sheet.name)
+
+    def get_table(self, index: int) -> Table:
+        return self.tables[index]
 
     def filter(self, table: Table, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
         return table.filter(callback)
