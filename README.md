@@ -103,10 +103,10 @@ table = ds.get_table(0)
 search_results = table.find(name='John Doe')
 table.remove(search_results[0])
 search_results[1]['name'] = 'Vicky'
-# we can have leave age empty if we do it like this!
+# we can leave age empty if we do it like this!
 table.append({'id': '3', 'name': 'Dick'})
 # we can use filter if we have even more complex conditions
-table.filter(lambda row: row['age'] is '')
+filter_results = table.filter(lambda row: row['age'] is '')
 # don't forget to save!
 table.save()
 ```
