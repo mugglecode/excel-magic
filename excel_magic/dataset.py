@@ -40,7 +40,7 @@ class Dataset:
     # TODO: content.id
 
     def __init__(self, path: str):
-        self.workbook = xlrd.open_workbook(path, formatting_info=True, on_demand=True)
+        self.workbook = xlrd.open_workbook(path, on_demand=True)
         self.tables = []
         sheet: xlrd.sheet.Sheet
         for sheet in self.workbook.sheets():

@@ -130,7 +130,7 @@ class ExcelDocument:
         :param path: path of the document
         :return: None
         """
-        workbook = xlrd.open_workbook(path, formatting_info=True)
+        workbook = xlrd.open_workbook(path)
         sheet: xlrd.sheet.Sheet
         for sheet in workbook.sheets():
             sheet_info = self._get_sheet(sheet.name)
