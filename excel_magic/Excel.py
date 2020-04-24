@@ -19,12 +19,12 @@ class Pointer:
         self.row = row
         self.col = col
 
-    def _next_row(self, current_col=False):
+    def next_row(self, current_col=False):
         if not current_col:
             self.col = 0
         self.row += 1
 
-    def _next_col(self):
+    def next_col(self):
         self.col += 1
 
 
@@ -36,7 +36,7 @@ class MagicSheet:
         self.name = name
         self.cols = 0
         self.rows = 0
-        self.raw_sheet = sheet
+        self.raw_sheet: xlsxwriter.workbook.Worksheet = sheet
         self.headers = []
 
     def _add_col(self):
@@ -45,7 +45,7 @@ class MagicSheet:
     def _add_row(self):
         self.rows += 1
 
-    def append(self, content: Union[Dict[str: str], List[str]]):
+    def append_row(self, content: Union[Dict[str: str], List[str]]):
         """
         append data to current sheet
         :param content: a dict{header: content} or a list [content]
@@ -54,7 +54,15 @@ class MagicSheet:
         if isinstance(content, dict):
             # is a dict
             for i in range(self.headers.__len__()):
-                pass  # TODO
+                if self.headers[i] in content:
+                    self.raw_sheet.write(self.rows, i, content[self.headers[i]])
+            self._add_row()
+        elif isinstance(content, list):
+            for i in range(content.__len__()):
+                self.raw_sheet.write(self.rows, i, content[i])
+            self._add_row()
+        else:
+            raise TypeError(f'Expected dict or list, got {type(content)} instead')
 
     def __str__(self):
         return self.name
@@ -99,6 +107,8 @@ class ExcelDocument:
             for key in template.keys():
                 m_sheet = self.add_sheet(key, template[key])
                 self.magicSheets.append(m_sheet)
+        else:
+            raise TypeError(f'Expected str or dict, got {type(template)} instead')
 
     def close(self):
         self.xlsxDocument.close()
@@ -140,7 +150,7 @@ class ExcelDocument:
         """
         if self._get_sheet(name) is None:
             sheet = self.xlsxDocument.add_worksheet(name)
-            m_sheet = MagicSheet(name ,sheet)
+            m_sheet = MagicSheet(name, sheet)
             for i in range(header.__len__()):
                 sheet.write_string(0, i, header[i])
                 m_sheet.headers.append(header[i])
@@ -191,8 +201,8 @@ class ExcelDocument:
 
                 else:
                     this_sheet.write(self.pointer.row, self.pointer.col, cell.value)
-                self.pointer._next_col()
+                self.pointer.next_col()
                 sheet_info._add_col()
 
             sheet_info._add_row()
-            self.pointer._next_row()
+            self.pointer.next_row()
