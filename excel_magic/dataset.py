@@ -167,7 +167,12 @@ class Sheet:
         return col
 
     def set_row_style(self, row: Union[dict, int], style: Style):
-        pass
+        if isinstance(row, int):
+            row = self.data_rows[row]
+
+        c: Cell
+        for c in row:
+            c.style = style
 
     def remove(self, row: dict):
         self.data_rows.remove(row)
@@ -244,7 +249,7 @@ class Dataset:
         else:
             return None
 
-    def does_exists(self, name: str) -> bool:
+    def does_exist(self, name: str) -> bool:
         for t in self.sheets:
             if t.name == name:
                 return True
@@ -322,3 +327,7 @@ class Dataset:
                     pointer.next_col()
                 pointer.next_row()
         workbook.close()
+
+
+def open_file(path: str) -> Dataset:
+    return Dataset(path)

@@ -22,41 +22,56 @@ doc.close()
 
 ---
 
-### Excel module
-
-- `create_document(path, template) -> ExcelDocument`
-
-- `open(path) -> Dataset`
-
-### ExcelDocument
-
-- `merge(path) -> None`
-  
-  - append another file to your document
-
-- `add_sheet(name: str, header: list[str]) -> MagicSheet`
-  
-  - add a sheet to your file
-
-- `close() -> None`
-  
-  - close and save
-
-### MagicSheet
-
-- `append_row(content: Union[Dict, List[str]])`
-  
-  - append one new row
-
 ## dataset Module
 
+### Style
+
+represents the style of a cell
+
+| attribute            | description                         | default |
+| -------------------- | ----------------------------------- | ------- |
+| horizontal_alignment | how text align in a cell            | left    |
+| vertical_alignment   | how text align vertically in a cell | top     |
+| bold                 | is text bold                        | False   |
+| underline            | is text underlined                  | False   |
+| font_color           | color of the font                   | black   |
+| font_name            | name of the font                    | Calibri |
+| font_size            | font size                           | 12      |
+| fill_color           | fill color                          | ''      |
+
+### Cell
+
+- `set_style(style: Style)`
+  
+  - se style of the cell
+
 ### Dataset
+
+- `get_sheet(index: int)`
+  
+  - get sheet by index
+
+- `get_sheet_by_name(name: str)`
+  
+  - get sheet by name
+
+- `does_exist(name: str)`
+  
+  - check if a sheet exists
+
+- `merge_file(path: str)`
+  
+  - merge another file to the current file
+
+- `remove_sheet(sheet: Sheet)`
+  
+  - remove a sheet
 
 - `save()`
   
   - save your stuff
 
-### Table
+### Sheet
 
 - `find(**kwargs)`
   
@@ -66,13 +81,33 @@ doc.close()
   
   - return a list of rows, filter by the callback function. return True if you want it
 
-- `append(content: dict)`
+- `append(content: Union[dict, List[str]])`
   
   - add a row to your file, dict keys should be your headers
 
 - `remove(row: dict)`
   
   - remove a row
+
+- `set_header_style(style: Style)`
+  
+  - set style of the header
+
+- get_col(col: str)
+  
+  - get rows of a column
+
+- `set_row_style(row: Union[dict, int], style: Style)`
+  
+  - set style of a row
+
+- `to_csv(out: str = '')`
+  
+  - Convert sheet to csv
+
+- `to_json(out: str = '')`
+  
+  - Convert sheet to json
 
 ## utils Module
 
