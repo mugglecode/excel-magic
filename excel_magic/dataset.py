@@ -1,8 +1,12 @@
+from copy import copy
+
 import xlrd
 from typing import Callable, Union, List
 import os
 import shutil
 import xlsxwriter
+import csv
+import json
 
 __all__ = ['Sheet', 'Dataset']
 
@@ -42,17 +46,18 @@ class Style:
         self.font_color = 'black'
         self.font_name = 'Calibri'
         self.font_size = '12'
-        self.fill_color = 'white'
+        self.fill_color = ''
 
     def attr(self):
-        return {'align': self.horizontal_alignment,
+        attr = {'align': self.horizontal_alignment,
                 'valign': self.vertical_alignment,
                 'bold': self.bold,
                 'underline': self.underline,
                 'font_color': self.font_color,
                 'font_name': self.font_name,
-                'font_size': self.font_size,
-                'bg_color': self.fill_color}
+                'font_size': self.font_size}
+        if self.fill_color != '':
+            attr['bg_color'] = self.fill_color
 
 
 class Cell:
@@ -137,8 +142,11 @@ class Sheet:
         new_row = {}
         if isinstance(content, dict):
             for field in self.fields:
-                if field in content.keys():
-                    new_row[field] = Cell(content[field])
+                if field in content:
+                    if isinstance(content[field], Cell):
+                        new_row[field] = content[field]
+                    else:
+                        new_row[field] = Cell(content[field])
                 else:
                     new_row[field] = Cell('')
         elif isinstance(content, list):
@@ -164,6 +172,45 @@ class Sheet:
     def remove(self, row: dict):
         self.data_rows.remove(row)
 
+    def to_csv(self, out: str = ''):
+        if out == '':
+            out = self.name + '.csv'
+
+        with open(out, 'w') as f:
+            w = csv.DictWriter(f, self.fields)
+            v = {}
+            for r in self.data_rows:
+                for key in r:
+                    v[key] = r[key].value
+                w.writerow(v)
+
+    def to_json(self, out: str = ''):
+        if out == '':
+            out = self.name + '.json'
+        data = []
+        for r in self.data_rows:
+            v = {}
+            for k in r:
+                v[k] = r[k].value
+            data.append(v)
+        with open(out, 'w') as f:
+            json.dump(data, f)
+
+    def group_by(self, by: Union[str, Callable[[dict], bool]]):
+        if isinstance(by, str):
+            grouped = []
+            ungrouped = copy(self.data_rows)
+            while ungrouped.__len__() > 0:
+                counter = 0
+                current = ungrouped[0][by].value
+                while counter < ungrouped.__len__():
+                    if ungrouped[counter][by].value == current:
+                        grouped.append(ungrouped[counter])
+                        ungrouped.remove(ungrouped[counter])
+                        counter -= 1
+
+                    counter += 1
+            return grouped
 
 class Dataset:
 
@@ -218,6 +265,7 @@ class Dataset:
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
         table = Sheet(name)
         table.fields = fields
+        self.sheets.append(table)
         return table
 
     def merge_file(self, path: str) -> None:
@@ -265,7 +313,7 @@ class Dataset:
             sheet = workbook.add_worksheet(table.name)
             pointer = Pointer(0, 0)
             for field in table.fields:
-                sheet.write(pointer.row, pointer.col, field, workbook.add_format(table.header_style))
+                sheet.write(pointer.row, pointer.col, field, workbook.add_format(table.header_style.attr()))
                 pointer.next_col()
             pointer.next_row()
             for data_row in table.data_rows:
