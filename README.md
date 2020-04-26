@@ -2,20 +2,29 @@
 
 Do magic to your excel file!
 
-## Quick Start
+# Use Case
+
+## CRUD using Dataset
+
+let's say we have a file like this:
+
+| id  | name     | age |
+| --- | -------- | --- |
+| 1   | John Doe | 12  |
+| 2   | Kelly    | 18  |
 
 ```python
-# To create an empty workbook
-from excel_magic import Excel
-doc = Excel.create_document('/path/to/your/file.xlsx', {"Sheet1": ['id', 'name', 'age']})
-# get your first sheet
-sheet = doc.get_sheet(0)
-# add a row
-sheet.append_row([1. 'John Doe', 18])
-# append another file
-doc.merge('file_to_append.xlsx')
-# close and save
-doc.close()
+ds = Dataset(&#39;a_file.xlsx&#39;)
+table = ds.get_sheet(0)
+search_results = table.find(name=&#39;John Doe&#39;)
+table.remove(search_results[0])
+search_results[1][&#39;name&#39;] = &#39;Vicky&#39;
+# we can leave age empty if we do it like this!
+table.append({&#39;id&#39;: &#39;3&#39;, &#39;name&#39;: &#39;Dick&#39;})
+# we can use filter if we have even more complex conditions
+filter_results = table.filter(lambda row: row[&#39;age&#39;] is &#39;&#39;)
+# don&#39;t forget to save!
+table.save()
 ```
 
 ## API Reference
@@ -120,28 +129,3 @@ represents the style of a cell
 - `split_rows(row_count: int, out='', out_prefix='')`
   
   - split file by rows
-
-# Use Cases
-
-## CRUD using Dataset
-
-let's say we have a file like this:
-
-| id  | name     | age |
-| --- | -------- | --- |
-| 1   | John Doe | 12  |
-| 2   | Kelly    | 18  |
-
-```python
-ds = Dataset('a_file.xlsx')
-table = ds.get_sheet(0)
-search_results = table.find(name='John Doe')
-table.remove(search_results[0])
-search_results[1]['name'] = 'Vicky'
-# we can leave age empty if we do it like this!
-table.append({'id': '3', 'name': 'Dick'})
-# we can use filter if we have even more complex conditions
-filter_results = table.filter(lambda row: row['age'] is '')
-# don't forget to save!
-table.save()
-```
