@@ -14,16 +14,16 @@ let's say we have a file like this:
 | 2   | Kelly    | 18  |
 
 ```python
-ds = Dataset(&#39;a_file.xlsx&#39;)
+ds = Dataset('a_file.xlsx')
 table = ds.get_sheet(0)
-search_results = table.find(name=&#39;John Doe&#39;)
+search_results = table.find(name='John Doe')
 table.remove(search_results[0])
-search_results[1][&#39;name&#39;] = &#39;Vicky&#39;
+search_results[1]['name'] = 'Vicky'
 # we can leave age empty if we do it like this!
-table.append({&#39;id&#39;: &#39;3&#39;, &#39;name&#39;: &#39;Dick&#39;})
+table.append({'id': '3', 'name': 'Dick'})
 # we can use filter if we have even more complex conditions
-filter_results = table.filter(lambda row: row[&#39;age&#39;] is &#39;&#39;)
-# don&#39;t forget to save!
+filter_results = table.filter(lambda row: row['age'] is '')
+# don't forget to save!
 table.save()
 ```
 
