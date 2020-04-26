@@ -99,7 +99,7 @@ let's say we have a file like this:
 
 ```python
 ds = Dataset('a_file.xlsx')
-table = ds.get_table(0)
+table = ds.get_sheet(0)
 search_results = table.find(name='John Doe')
 table.remove(search_results[0])
 search_results[1]['name'] = 'Vicky'
