@@ -86,6 +86,14 @@ class Table:
                 new_row[field] = ''
         self.data_rows.append(new_row)
 
+    def get_col(self, col: str):
+        if col not in self.fields:
+            raise NameError(f'field "{col}" does not exists')
+        col = []
+        for row in self.data_rows:
+            col.append(row[col])
+        return col
+
     def remove(self, row: dict):
         self.data_rows.remove(row)
 

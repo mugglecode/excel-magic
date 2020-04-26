@@ -3,6 +3,20 @@ import xlsxwriter
 import os
 
 
+class Pointer:
+    def __init__(self, row: int, col: int):
+        self.row = row
+        self.col = col
+
+    def next_row(self, current_col=False):
+        if not current_col:
+            self.col = 0
+        self.row += 1
+
+    def next_col(self):
+        self.col += 1
+
+
 def split_sheets(path: str, out: str = '', out_prefix: str = ''):
     original_workbook = xlrd.open_workbook(path, formatting_info=True)
     sheet: xlrd.sheet.Sheet

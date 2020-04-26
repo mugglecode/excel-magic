@@ -1,5 +1,8 @@
+import sys
+
 from excel_magic import splitter
 import xlrd
+import os
 
 __all__ = ['Document']
 
@@ -26,3 +29,17 @@ class Document:
 
         html += '</table>'
         return html
+
+    def to_pdf(self, out = 'out.pdf', config = ''):
+        if not (os.path.isfile('render-pea') or os.path.isfile('render-pea.exe')):
+            raise FileNotFoundError('render-pea plugin is not present')
+
+        if sys.platform.startswith('win'):
+            cmd = f'render-pea.exe "{self.docPath}" --out "{out}"'
+        else:
+            cmd = f'./render-pea "{self.docPath}" --out "{out}"'
+        if config != '':
+            cmd += f' --config "{config}"'
+        print(cmd)
+        a = os.popen(cmd)
+        print(a)
