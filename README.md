@@ -102,7 +102,7 @@ represents the style of a cell
   
   - set style of the header
 
-- get_col(col: str)
+- `get_col(col: str)`
   
   - get rows of a column
 
