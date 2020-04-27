@@ -84,9 +84,11 @@ class Cell:
             return self.value == other.value and\
                    self.style == other.style
         else:
-            if (isinstance(self.value, type(other))):
+            if isinstance(self.value, type(other)):
                 return self.value == other
             else:
+                if isinstance(other, int):
+                    return self.value == float(other)
                 return self.value is other
 
 class Sheet:
