@@ -388,7 +388,7 @@ class Dataset:
 
             new_row = []
             for cell in row:
-                new_row.append(cell)
+                new_row.append(cell.value)
             tbl.append(new_row)
 
     def remove_sheet(self, sheet: Sheet) -> None:
