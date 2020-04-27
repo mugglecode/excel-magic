@@ -14,7 +14,7 @@ let's say we have a file like this:
 | 2   | Kelly    | 18  |
 
 ```python
-from dataset import Dataset
+from excel_magic.dataset import Dataset
 ds = Dataset('a_file.xlsx')
 table = ds.get_sheet(0)
 search_results = table.find(name='John Doe')

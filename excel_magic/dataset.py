@@ -309,7 +309,8 @@ class Dataset:
             self.create_sheet_by_json(key, data[key])
 
     def export_json(self, out: str):
-        pass
+        for sheet in self.sheets:
+            pass
 
     def merge_file(self, path: str) -> None:
         workbook = xlrd.open_workbook(path)
