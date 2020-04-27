@@ -118,6 +118,9 @@ represents the style of a cell
   
 - `get_rows() -> List[dict]`
   - get all rows
+  
+- `print_row(index: int) -> str`
+  - return a string of a row ready to be print
 
 - `set_row_style(row: Union[dict, int], style: Style)`
   
