@@ -82,9 +82,9 @@ class Sheet:
         self.data_rows: List[dict] = []
         self.header_style: Style = Style()
         if isinstance(sheet, str):
-            self.name = sheet
+            self.name: str = sheet
         else:
-            self.name = sheet.name
+            self.name: str = sheet.name
             self._init_fields(sheet)
             self._init_data(sheet)
 
@@ -252,8 +252,9 @@ class Dataset:
         return self.sheets[index]
 
     def get_sheet_by_name(self, name: str) -> Union[Sheet, None]:
+        t: Sheet
         for t in self.sheets:
-            if t.name == name:
+            if t.name.lower() == name.lower():
                 return t
         else:
             return None
