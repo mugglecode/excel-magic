@@ -172,6 +172,13 @@ class Sheet:
             col.append(row[col])
         return col
 
+    def print_row(self, index: int):
+        row = self.data_rows[index]
+        result = ''
+        for k in row:
+            result += f'{k}: {row[k].value}, '
+        return result
+
     def set_row_style(self, row: Union[dict, int], style: Style) -> None:
         if isinstance(row, int):
             row = self.data_rows[row]
