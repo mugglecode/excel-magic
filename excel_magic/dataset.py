@@ -273,7 +273,9 @@ class Dataset:
 
         return result
 
-    def append(self, sheet: Sheet, content: dict) -> None:
+    def append_row(self, sheet: Union[Sheet, str], content: dict) -> None:
+        if isinstance(sheet, str):
+            sheet = self.get_sheet_by_name(sheet)
         sheet.append(content)
 
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
@@ -349,7 +351,7 @@ class Dataset:
             new_row = []
             for cell in row:
                 new_row.append(cell)
-            tbl.append(new_row)
+            tbl.append_row(new_row)
 
     def remove_sheet(self, sheet: Sheet) -> None:
         self.sheets.remove(sheet)
