@@ -158,6 +158,9 @@ class Sheet:
             raise TypeError('Expected dict or list}')
         self.data_rows.append(new_row)
 
+    def get_rows(self) -> List[dict]:
+        return self.data_rows
+
     def get_col(self, col: str):
         if col not in self.fields:
             raise NameError(f'field "{col}" does not exists')

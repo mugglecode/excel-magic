@@ -100,7 +100,7 @@ represents the style of a cell
   
   - return a list of rows, filter by the callback function. return True if you want it
 
-- `append(content: Union[dict, List[str]])`
+- `append_row(content: Union[dict, List[str]])`
   
   - add a row to your file, dict keys should be your headers
 
@@ -115,6 +115,9 @@ represents the style of a cell
 - `get_col(col: str)`
   
   - get rows of a column
+  
+- `get_rows() -> List[dict]`
+  - get all rows
 
 - `set_row_style(row: Union[dict, int], style: Style)`
   
