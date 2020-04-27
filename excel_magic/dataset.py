@@ -1,3 +1,4 @@
+import datetime
 from copy import copy
 
 import xlrd
@@ -47,6 +48,7 @@ class Style:
         self.font_name = 'Calibri'
         self.font_size = '12'
         self.fill_color = ''
+        self.num_format = ''
 
     def attr(self):
         attr = {'align': self.horizontal_alignment,
@@ -58,6 +60,8 @@ class Style:
                 'font_size': self.font_size}
         if self.fill_color != '':
             attr['bg_color'] = self.fill_color
+        if self.num_format != '':
+            attr['num_format'] = self.num_format
 
 
 class Cell:
@@ -121,7 +125,12 @@ class Sheet:
             for i in range(len(self.fields)):
                 # to prevent bug when there is an empty cell
                 if i < len(row):
-                    new_row[self.fields[i]] = Cell(row[i].value)
+                    if row[i].ctype == 3:
+                        c = Cell(datetime.datetime(*xlrd.xldate_as_tuple(row[i].value, sheet.book.datemode)))
+                        c.style.num_format = 'yyyy/mm/dd'
+                        new_row[self.fields[i]] = c
+                    else:
+                        new_row[self.fields[i]] = Cell(row[i].value)
                 else:
                     new_row[self.fields[i]] = ''
             self.data_rows.append(new_row)
@@ -391,7 +400,8 @@ class Dataset:
 
         # open new file
         filename = os.path.join(self.path, self.filename)
-        workbook = xlsxwriter.Workbook(filename)
+        workbook = xlsxwriter.Workbook(filename, {'default_date_format':
+                                                  'yyyy/mm/dd'})
         for table in self.sheets:
             sheet = workbook.add_worksheet(table.name)
             pointer = Pointer(0, 0)
@@ -401,7 +411,10 @@ class Dataset:
             pointer.next_row()
             for data_row in table.data_rows:
                 for data in data_row.values():
-                    sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
+                    if isinstance(data.value, datetime.datetime):
+                        sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
+                    else:
+                        sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
                     pointer.next_col()
                 pointer.next_row()
         workbook.close()
