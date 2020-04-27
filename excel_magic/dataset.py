@@ -309,8 +309,17 @@ class Dataset:
             self.create_sheet_by_json(key, data[key])
 
     def export_json(self, out: str):
+        json_sheets = {}
         for sheet in self.sheets:
-            pass
+            data = []
+            for r in sheet.data_rows:
+                v = {}
+                for k in r:
+                    v[k] = r[k].value
+                data.append(v)
+            json_sheets[sheet.name] = data
+        with open(out, 'w') as f:
+            json.dump(json_sheets, f)
 
     def merge_file(self, path: str) -> None:
         workbook = xlrd.open_workbook(path)

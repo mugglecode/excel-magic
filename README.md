@@ -78,6 +78,9 @@ represents the style of a cell
   
 - `import_json(path: str)`
   - import multiple sheets from a json file
+ 
+- `export_json(out: str)`
+  - export all sheets to a json file
 
 - `remove_sheet(sheet: Sheet)`
   
