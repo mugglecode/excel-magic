@@ -74,6 +74,9 @@ class Cell:
     def attr(self):
         return self.style.attr()
 
+    def __str__(self):
+        return self.value
+
 
 class Sheet:
 
