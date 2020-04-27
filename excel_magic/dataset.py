@@ -77,6 +77,14 @@ class Cell:
     def __str__(self):
         return self.value
 
+    def __eq__(self, other: 'Cell'):
+        """
+        does not compare style!
+        :param other: the other one
+        :return: bool
+        """
+        return self.value == other.value
+
 
 class Sheet:
 
@@ -172,6 +180,7 @@ class Sheet:
             col.append(row[col])
         return col
 
+    # TODO: print(row)
     def print_row(self, index: int):
         row = self.data_rows[index]
         result = ''
