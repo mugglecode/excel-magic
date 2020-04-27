@@ -376,7 +376,7 @@ class Dataset:
                 for h in headers:
                     tbl.fields.append(h.value)
                 self._merge_table(sheet, tbl)
-            self.sheets.append(tbl)
+                self.sheets.append(tbl)
 
     def _merge_table(self, sheet, tbl):
         flg_first_row = True
