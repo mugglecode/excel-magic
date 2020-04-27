@@ -77,14 +77,14 @@ class Cell:
     def __str__(self):
         return self.value
 
-    def __eq__(self, other: 'Cell'):
-        """
-        does not compare style!
-        :param other: the other one
-        :return: bool
-        """
-        return self.value == other.value
-
+    def __eq__(self, other: Union['Cell', str]):
+        if isinstance(other, str):
+            return self.value == other
+        elif isinstance(other, Cell):
+            return self.value == other.value and\
+                   self.style == other.style
+        else:
+            return self is other
 
 class Sheet:
 
