@@ -14,6 +14,7 @@ let's say we have a file like this:
 | 2   | Kelly    | 18  |
 
 ```python
+from dataset import Dataset
 ds = Dataset('a_file.xlsx')
 table = ds.get_sheet(0)
 search_results = table.find(name='John Doe')
@@ -24,7 +25,7 @@ table.append({'id': '3', 'name': 'Dick'})
 # we can use filter if we have even more complex conditions
 filter_results = table.filter(lambda row: row['age'] is '')
 # don't forget to save!
-table.save()
+ds.save()
 ```
 
 ## API Reference
