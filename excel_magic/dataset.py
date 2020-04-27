@@ -113,7 +113,7 @@ class Sheet:
     def set_header_style(self, style: Style):
         self.header_style = style
 
-    def find(self, **kwargs):
+    def find(self, **kwargs) -> List[dict]:
         result = []
         # Check kwargs
         for kwarg in kwargs:
@@ -128,7 +128,7 @@ class Sheet:
                 result.append(data_row)
         return result
 
-    def filter(self, callback: Callable[[dict], Union[None, bool]]):
+    def filter(self, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
         data_list = []
 
         for row in self.data_rows:
@@ -138,7 +138,7 @@ class Sheet:
 
         return data_list
 
-    def append(self, content: Union[dict, List[str]]):
+    def append(self, content: Union[dict, List[str]]) -> None:
         new_row = {}
         if isinstance(content, dict):
             for field in self.fields:
@@ -166,7 +166,7 @@ class Sheet:
             col.append(row[col])
         return col
 
-    def set_row_style(self, row: Union[dict, int], style: Style):
+    def set_row_style(self, row: Union[dict, int], style: Style) -> None:
         if isinstance(row, int):
             row = self.data_rows[row]
 
@@ -174,10 +174,18 @@ class Sheet:
         for c in row:
             c.style = style
 
-    def remove(self, row: dict):
+    def remove(self, row: dict) -> None:
         self.data_rows.remove(row)
 
-    def to_csv(self, out: str = ''):
+    def import_json(self, path: str) -> None:
+        with open(path, 'r') as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            raise ValueError('invalid file format')
+        for row in data:
+            self.append(row)
+
+    def to_csv(self, out: str = '') -> None:
         if out == '':
             out = self.name + '.csv'
 
@@ -189,7 +197,7 @@ class Sheet:
                     v[key] = r[key].value
                 w.writerow(v)
 
-    def to_json(self, out: str = ''):
+    def to_json(self, out: str = '') -> None:
         if out == '':
             out = self.name + '.json'
         data = []
@@ -201,7 +209,7 @@ class Sheet:
         with open(out, 'w') as f:
             json.dump(data, f)
 
-    def group_by(self, by: Union[str, Callable[[dict], bool]]):
+    def group_by(self, by: str) -> List[dict]:
         if isinstance(by, str):
             grouped = []
             ungrouped = copy(self.data_rows)
@@ -216,6 +224,7 @@ class Sheet:
 
                     counter += 1
             return grouped
+
 
 class Dataset:
 
@@ -259,12 +268,12 @@ class Dataset:
     def filter(self, table: Sheet, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
         return table.filter(callback)
 
-    def find(self, sheet: Sheet, **kwargs):
+    def find(self, sheet: Sheet, **kwargs) -> List[dict]:
         result = sheet.find(**kwargs)
 
         return result
 
-    def append(self, sheet: Sheet, content: dict):
+    def append(self, sheet: Sheet, content: dict) -> None:
         sheet.append(content)
 
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
@@ -272,6 +281,35 @@ class Dataset:
         table.fields = fields
         self.sheets.append(table)
         return table
+
+    def create_sheet_by_json(self, name: str, data: Union[str, list]) -> Sheet:
+        if isinstance(data, str):
+            with open(data, 'r') as f:
+                data: Union[list, dict] = json.load(f)
+
+        if isinstance(data, list):
+            header = data[0].keys()
+        elif isinstance(data, dict):
+            header = data.keys()
+        else:
+            raise ValueError('corrupted file')
+        sheet = self.add_sheet(name, header)
+        if isinstance(data, list):
+            for d in data:
+                sheet.append(d)
+        return sheet
+
+    def import_json(self, path: str) -> None:
+        with open(path, 'r') as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError('invalid format')
+
+        for key in data:
+            self.create_sheet_by_json(key, data[key])
+
+    def export_json(self, out: str):
+        pass
 
     def merge_file(self, path: str) -> None:
         workbook = xlrd.open_workbook(path)
