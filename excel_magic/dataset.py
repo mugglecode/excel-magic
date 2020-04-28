@@ -105,8 +105,8 @@ class Sheet:
             self.name: str = sheet
         else:
             self.name: str = sheet.name
-            self._init_fields(sheet)
-            self._init_data(sheet)
+        self._init_fields(sheet)
+        self._init_data(sheet)
 
     def _init_fields(self, sheet: xlrd.sheet.Sheet):
         fields_row = sheet.row(0)
@@ -147,6 +147,12 @@ class Sheet:
 
         for data_row in self.data_rows:
             for key in kwargs.keys():
+                if isinstance(kwargs[key], int):
+                    if data_row[key].value != float(kwargs[key]):
+                        break
+                    else:
+                        continue
+
                 if data_row[key].value != kwargs[key]:
                     break
             else:
@@ -219,7 +225,7 @@ class Sheet:
         if not isinstance(data, list):
             raise ValueError('invalid file format')
         for row in data:
-            self.append(row)
+            self.append_row(row)
 
     def to_csv(self, out: str = '') -> None:
         if out == '':
@@ -320,7 +326,7 @@ class Dataset:
             sheet = self.get_sheet_by_name(sheet)
         if sheet is None:
             raise NameError(f'{sheet} does not exist')
-        sheet.append(content)
+        sheet.append_row(content)
 
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
         if self.does_exist(name):
@@ -344,7 +350,7 @@ class Dataset:
         sheet = self.add_sheet(name, header)
         if isinstance(data, list):
             for d in data:
-                sheet.append(d)
+                sheet.append_row(d)
         return sheet
 
     def import_json(self, path: str) -> None:
@@ -398,7 +404,7 @@ class Dataset:
             new_row = []
             for cell in row:
                 new_row.append(cell.value)
-            tbl.append(new_row)
+            tbl.append_row(new_row)
 
     def remove_sheet(self, sheet: Sheet) -> None:
         self.sheets.remove(sheet)
