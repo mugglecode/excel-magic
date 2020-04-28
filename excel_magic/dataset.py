@@ -427,6 +427,12 @@ class Dataset:
                 pointer.next_row()
         workbook.close()
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.save()
+
+    def __enter__(self):
+        return self
+
 
 def open_file(path: str) -> Dataset:
     return Dataset(path)
