@@ -2,7 +2,7 @@ import datetime
 from copy import copy
 
 import xlrd
-from typing import Callable, Union, List
+from typing import Callable, Union, List, Any
 import os
 import shutil
 import xlsxwriter
@@ -65,7 +65,7 @@ class Style:
 
 
 class Cell:
-    def __init__(self, value='', style: Style = None):
+    def __init__(self, value: Any = '', style: Style = None):
         self.value = value
         if style is None:
             self.style = Style()
@@ -130,6 +130,10 @@ class Sheet:
                         c.style.num_format = 'yyyy/mm/dd'
                         new_row[self.fields[i]] = c
                     else:
+                        if isinstance(row[i].value, str):
+                            if row[i].value.isnumeric():
+                                print('Warning: Found a number stored in string format, converting...')
+                                new_row[self.fields[i]] = Cell(float(row[i].value))
                         new_row[self.fields[i]] = Cell(row[i].value)
                 else:
                     new_row[self.fields[i]] = ''
@@ -190,7 +194,8 @@ class Sheet:
         self.data_rows.append(new_row)
 
     def get_rows(self) -> List[dict]:
-        return self.data_rows
+        r = [*self.data_rows]
+        return r
 
     def get_col(self, col: str):
         if col not in self.fields:
