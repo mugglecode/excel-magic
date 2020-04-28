@@ -163,7 +163,7 @@ class Sheet:
 
         return data_list
 
-    def append(self, content: Union[dict, List[str]]) -> None:
+    def append_row(self, content: Union[dict, List[str]]) -> None:
         new_row = {}
         if isinstance(content, dict):
             for field in self.fields:
@@ -210,7 +210,7 @@ class Sheet:
         for c in row:
             c.style = style
 
-    def remove(self, row: dict) -> None:
+    def remove_row(self, row: dict) -> None:
         self.data_rows.remove(row)
 
     def import_json(self, path: str) -> None:
