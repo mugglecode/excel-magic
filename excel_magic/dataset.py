@@ -261,6 +261,11 @@ class Sheet:
                     counter += 1
             return grouped
 
+    def __eq__(self, other):
+        if self.name == other.name:
+            return True
+        return False
+
 
 class Dataset:
 
