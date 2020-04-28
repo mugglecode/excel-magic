@@ -96,7 +96,7 @@ class Cell:
                 return self.value is other
 
 class Sheet:
-
+    # TODO sheet style
     def __init__(self, sheet: Union[xlrd.sheet.Sheet, str] = ''):
         self.fields = []
         self.data_rows: List[dict] = []
@@ -316,6 +316,8 @@ class Dataset:
         sheet.append(content)
 
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
+        if self.does_exist(name):
+            raise Exception('Sheet already exists')
         table = Sheet(name)
         table.fields = fields
         self.sheets.append(table)
