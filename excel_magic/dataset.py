@@ -318,6 +318,8 @@ class Dataset:
     def append_row(self, sheet: Union[Sheet, str], content: dict) -> None:
         if isinstance(sheet, str):
             sheet = self.get_sheet_by_name(sheet)
+        if sheet is None:
+            raise NameError('Sheet does not exist')
         sheet.append(content)
 
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
