@@ -1,7 +1,7 @@
 import datetime
 import sys
 from copy import copy
-
+import sqlite3
 import xlrd
 from typing import Callable, Union, List, Any
 import os
@@ -63,6 +63,13 @@ class Style:
             attr['bg_color'] = self.fill_color
         if self.num_format != '':
             attr['num_format'] = self.num_format
+
+
+class Header:
+    def __init__(self, value: str, style: Style, width: int = 20):
+        self.value = value
+        self.style = style
+        self.width = width
 
 
 class Cell:
@@ -271,7 +278,6 @@ class Sheet:
         a = os.popen(cmd)
         print(a)
 
-
     def group_by(self, by: str) -> List[dict]:
         if isinstance(by, str):
             grouped = []
@@ -393,6 +399,29 @@ class Dataset:
             json_sheets[sheet.name] = data
         with open(out, 'w') as f:
             json.dump(json_sheets, f)
+
+    def to_sqlite(self, out: str):
+        conn = sqlite3.connect(out)
+        cur = conn.cursor()
+        current_table = ''
+        for sheet in self.sheets:
+            current_table = sheet.name
+            cmd = f"CREATE TABLE '{current_table}' ({','.join(sheet.fields)})"
+            cur.execute(cmd)
+            conn.commit()
+            for row in sheet.data_rows:
+                values = ''
+                for cell in row.values():
+                    if isinstance(cell.value, float):
+                        values += str(cell.value)
+                    else:
+                        values += '"' + cell.value + '"'
+                    values += ','
+                values = values[: -1]
+                cmd = f"INSERT INTO {current_table} VALUES ({values})"
+                cur.execute(cmd)
+        conn.commit()
+        conn.close()
 
     def merge_file(self, path: str) -> None:
         workbook = xlrd.open_workbook(path)
