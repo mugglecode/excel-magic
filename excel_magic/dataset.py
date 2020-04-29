@@ -9,6 +9,8 @@ import shutil
 import xlsxwriter
 import csv
 import json
+from chromium_downloader import check_chromium, download_chromium
+import requests
 
 __all__ = ['Sheet', 'Dataset', 'open_file']
 
@@ -266,7 +268,17 @@ class Sheet:
 
     def to_pdf(self, out='out.pdf', config=''):
         if not (os.path.isfile('render-pea') or os.path.isfile('render-pea.exe')):
-            raise FileNotFoundError('render-pea plugin is not present')
+            # raise FileNotFoundError('render-pea plugin is not present')
+            if sys.platform == 'darwin':
+                filename = 'render-pea'
+            else:
+                filename = 'render-pea.exe'
+            url = '' + sys.platform + filename
+            file = requests.get(url)
+            with open(filename, 'wb') as f:
+                f.write(file.content)
+        if not check_chromium():
+            download_chromium()
 
         if sys.platform.startswith('win'):
             cmd = f'render-pea.exe "{self.filename}" --name "{self.name}" --out "{out}"'
