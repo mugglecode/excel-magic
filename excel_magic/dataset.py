@@ -1,4 +1,5 @@
 import datetime
+import sys
 from copy import copy
 
 import xlrd
@@ -95,12 +96,13 @@ class Cell:
                     return self.value == float(other)
                 return self.value is other
 
+
 class Sheet:
-    # TODO sheet style
-    def __init__(self, sheet: Union[xlrd.sheet.Sheet, str] = ''):
+    def __init__(self, path: str, sheet: Union[xlrd.sheet.Sheet, str] = ''):
         self.fields = []
         self.data_rows: List[dict] = []
         self.header_style: Style = Style()
+        self.filename = path
         if isinstance(sheet, str):
             self.name: str = sheet
         else:
@@ -205,7 +207,6 @@ class Sheet:
             col.append(row[col])
         return col
 
-    # TODO: print(row)
     def print_row(self, index: int):
         row = self.data_rows[index]
         result = ''
@@ -256,6 +257,21 @@ class Sheet:
         with open(out, 'w') as f:
             json.dump(data, f)
 
+    def to_pdf(self, out='out.pdf', config=''):
+        if not (os.path.isfile('render-pea') or os.path.isfile('render-pea.exe')):
+            raise FileNotFoundError('render-pea plugin is not present')
+
+        if sys.platform.startswith('win'):
+            cmd = f'render-pea.exe "{self.filename}" --name "{self.name}" --out "{out}"'
+        else:
+            cmd = f'./render-pea "{self.filename}" --name "{self.name}" --out "{out}"'
+        if config != '':
+            cmd += f' --config "{config}"'
+        print(cmd)
+        a = os.popen(cmd)
+        print(a)
+
+
     def group_by(self, by: str) -> List[dict]:
         if isinstance(by, str):
             grouped = []
@@ -280,8 +296,6 @@ class Sheet:
 
 class Dataset:
 
-    # TODO: content.id
-
     def __init__(self, path: str):
         if not os.path.isfile(path):
             wb = xlsxwriter.Workbook(path)
@@ -297,7 +311,7 @@ class Dataset:
                 sheet.row(0)
             except IndexError:
                 continue
-            self.sheets.append(Sheet(sheet))
+            self.sheets.append(Sheet(path, sheet))
             self.workbook.unload_sheet(sheet.name)
 
     def get_sheet(self, index: int) -> Sheet:
@@ -336,7 +350,7 @@ class Dataset:
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
         if self.does_exist(name):
             raise Exception('Sheet already exists')
-        table = Sheet(name)
+        table = Sheet(self.filename, name)
         table.fields = fields
         self.sheets.append(table)
         return table
@@ -388,7 +402,7 @@ class Dataset:
             if tbl is not None:
                 self._merge_table(sheet, tbl)
             else:
-                tbl = Sheet(sheet.name)
+                tbl = Sheet(self.filename, sheet.name)
                 try:
                     headers = sheet.row(0)
                 except IndexError:
