@@ -9,7 +9,7 @@ import xlsxwriter
 import csv
 import json
 
-__all__ = ['Sheet', 'Dataset']
+__all__ = ['Sheet', 'Dataset', 'open_file']
 
 
 class Pointer:
