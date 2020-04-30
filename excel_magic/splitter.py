@@ -18,7 +18,7 @@ class Pointer:
 
 
 def split_sheets(path: str, out: str = '', out_prefix: str = ''):
-    original_workbook = xlrd.open_workbook(path, formatting_info=True)
+    original_workbook = xlrd.open_workbook(path)
     sheet: xlrd.sheet.Sheet
     for sheet in original_workbook.sheets():
         sheet_workbook = xlsxwriter.Workbook(os.path.join(out, out_prefix) + sheet.name + '.xlsx')
@@ -46,7 +46,7 @@ def split_rows(path: str, row_count: int, out: str = '', out_prefix: str = ''):
     original_pointer = Pointer(0, 0)
     sheet_pointer = Pointer(0, 0)
 
-    workbook = xlrd.open_workbook(path, formatting_info=True)
+    workbook = xlrd.open_workbook(path)
     if workbook.sheets().__len__() > 1:
         raise MultipleSheetsError('You have multiple sheets in this file')
 
