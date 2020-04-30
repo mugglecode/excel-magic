@@ -12,7 +12,6 @@ import sys
 from zipfile import ZipFile
 import requests
 import urllib3
-from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +97,7 @@ def extract_zip(data: BytesIO, path: Path) -> None:
 def download_chromium() -> None:
     """Download and extract chromium."""
     # extract_zip(download_zip(get_url()), DOWNLOADS_FOLDER / REVISION)
-    file = requests.get(get_url())
+    file = requests.get(chromiumExecutable['win32'])
     file = BytesIO(file.content)
     extract_zip(file, Path(''))
 
