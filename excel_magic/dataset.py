@@ -9,7 +9,7 @@ import shutil
 import xlsxwriter
 import csv
 import json
-from chromium_downloader import check_chromium, download_chromium
+from excel_magic.chromium_downloader import check_chromium, download_chromium
 import requests
 
 __all__ = ['Sheet', 'Dataset', 'open_file']
