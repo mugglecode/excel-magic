@@ -89,7 +89,7 @@ class Cell:
         return self.style.attr()
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
     def __eq__(self, other: Union['Cell', str]):
         if isinstance(other, str):
@@ -211,10 +211,10 @@ class Sheet:
     def get_col(self, col: str):
         if col not in self.fields:
             raise NameError(f'field "{col}" does not exists')
-        col = []
+        result = []
         for row in self.data_rows:
-            col.append(row[col])
-        return col
+            result.append(row[col])
+        return result
 
     def print_row(self, index: int):
         row = self.data_rows[index]
