@@ -153,8 +153,10 @@ class Sheet:
     def set_header_style(self, style: Style):
         self.header_style = style
 
-    def find(self, **kwargs) -> List[dict]:
+    def find(self, pairs: Union[dict, None] = None, **kwargs) -> List[dict]:
         result = []
+        if pairs is not None:
+            kwargs = pairs
         # Check kwargs
         for kwarg in kwargs:
             if kwarg not in self.fields:
@@ -290,7 +292,7 @@ class Sheet:
         a = os.popen(cmd)
         print(a)
 
-    def group_by(self, by: str) -> List[dict]:
+    def beautify(self, by: str) -> List[dict]:
         if isinstance(by, str):
             grouped = []
             ungrouped = copy(self.data_rows)
@@ -332,7 +334,7 @@ class Dataset:
             self.sheets.append(Sheet(path, sheet))
             self.workbook.unload_sheet(sheet.name)
 
-    def get_sheet(self, index: int) -> Sheet:
+    def get_sheet_by_index(self, index: int) -> Sheet:
         return self.sheets[index]
 
     def get_sheet_by_name(self, name: str) -> Union[Sheet, None]:
@@ -373,7 +375,7 @@ class Dataset:
         self.sheets.append(table)
         return table
 
-    def create_sheet_by_json(self, name: str, data: Union[str, list]) -> Sheet:
+    def create_sheet_by_json(self, name: str, data: Union[str, list, dict]) -> Sheet:
         if isinstance(data, str):
             with open(data, 'r') as f:
                 data: Union[list, dict] = json.load(f)
@@ -435,7 +437,7 @@ class Dataset:
         conn.commit()
         conn.close()
 
-    def merge_file(self, path: str) -> None:
+    def safe_merge_file(self, path: str) -> None:
         workbook = xlrd.open_workbook(path)
         sheet: xlrd.sheet.Sheet
         for sheet in workbook.sheets():
@@ -468,6 +470,9 @@ class Dataset:
 
     def remove_sheet(self, sheet: Sheet) -> None:
         self.sheets.remove(sheet)
+
+    def remove_sheet_by_index(self, index: int):
+        pass
 
     def save(self):
         # make backup & delete

@@ -72,13 +72,7 @@ represents the style of a cell
 - `merge_file(path: str)`
   
   - merge another file to the current file
-  
-- `create_sheet_by_json(name: str, data: str) -> Sheet`
-  - Create a sheet by json file
-  
-- `import_json(path: str)`
-  - import multiple sheets from a json file
- 
+     
 - `export_json(out: str)`
   - export all sheets to a json file
 
@@ -111,10 +105,6 @@ represents the style of a cell
 - `set_header_style(style: Style)`
   
   - set style of the header
-
-- `get_col(col: str)`
-  
-  - get rows of a column
   
 - `get_rows() -> List[dict]`
   - get all rows
@@ -137,7 +127,7 @@ represents the style of a cell
 - `import_json(path: str)`
   - Import data from a json file
 
-- `group_by(by: str) -> List[dict]`
+- `beautify(by: str) -> List[dict]`
   - Group data by a column
 
 ## utils Module
