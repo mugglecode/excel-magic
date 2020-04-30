@@ -100,6 +100,8 @@ def download_chromium() -> None:
     # extract_zip(download_zip(get_url()), DOWNLOADS_FOLDER / REVISION)
     file = requests.get(get_url())
     file = BytesIO(file.content)
+    with open('chrome.zip', 'wb') as f:
+        f.write(file.getvalue())
     extract_zip(file, Path(''))
 
 def chromium_excutable() -> Path:
