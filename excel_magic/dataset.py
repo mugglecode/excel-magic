@@ -116,8 +116,8 @@ class Sheet:
             self.name: str = sheet
         else:
             self.name: str = sheet.name
-        self._init_fields(sheet)
-        self._init_data(sheet)
+            self._init_fields(sheet)
+            self._init_data(sheet)
 
     def _init_fields(self, sheet: xlrd.sheet.Sheet):
         fields_row = sheet.row(0)
