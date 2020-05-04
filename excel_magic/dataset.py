@@ -198,10 +198,11 @@ class Sheet:
                 else:
                     new_row[field] = Cell('')
         elif isinstance(content, list):
-            if content.__len__() != self.fields.__len__():
-                raise ValueError(f'Expected {self.fields.__len__()} values, got {content.__len__()}')
             for i in range(len(self.fields)):
                 new_row[self.fields[i]] = Cell(content[i])
+            if len(content) < len(self.fields):
+                for i in range(len(content) - 1, len(self.fields)):
+                    new_row[self.fields[i]] = Cell('')
         else:
             raise TypeError('Expected dict or list}')
         self.data_rows.append(new_row)
@@ -443,6 +444,14 @@ class Dataset:
         for sheet in workbook.sheets():
             tbl = self.get_sheet_by_name(sheet.name)
             if tbl is not None:
+                if force:
+                    headers_to_merge = sheet.row(0)
+                    for i in range(len(headers_to_merge)):
+                        headers_to_merge[i] = headers_to_merge[i].value
+                    for h in headers_to_merge:
+                        if h in tbl.fields:
+                            headers_to_merge.remove(h)
+                    tbl.fields.extend(headers_to_merge)
                 self._merge_table(sheet, tbl)
             else:
                 tbl = Sheet(self.filename, sheet.name)
