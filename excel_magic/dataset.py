@@ -486,7 +486,7 @@ class Dataset:
             doc.add_sheet(s.name, s.fields)
             for row in s.data_rows:
                 doc.append_row(s.name, row)
-            doc.save()
+            doc.save(backup=False)
 
     def remove_sheet(self, sheet: Sheet) -> None:
         self.sheets.remove(sheet)
@@ -494,9 +494,9 @@ class Dataset:
     def remove_sheet_by_index(self, index: int):
         pass
 
-    def save(self):
+    def save(self, backup = True):
         # make backup & delete
-        if os.path.isfile(os.path.join(self.path, self.filename)):
+        if os.path.isfile(os.path.join(self.path, self.filename)) and backup:
             shutil.copy(os.path.join(self.path, self.filename), os.path.join(self.path, self.backup_name))
             os.remove(os.path.join(self.path, self.filename))
 
