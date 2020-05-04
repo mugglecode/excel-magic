@@ -293,6 +293,9 @@ class Sheet:
         a = os.popen(cmd)
         print(a)
 
+    def split_rows(path: str, row_count: int, name_by: str):
+        filenames = {}
+
     def beautify(self, by: str) -> List[dict]:
         if isinstance(by, str):
             grouped = []
@@ -477,6 +480,14 @@ class Dataset:
                 new_row.append(cell.value)
             tbl.append_row(new_row)
 
+    def split_sheets_to_file(self):
+        for s in self.sheets:
+            doc = open_file(s.name + '.xlsx')
+            doc.add_sheet(s.name, s.fields)
+            for row in s.data_rows:
+                doc.append_row(s.name, row)
+            doc.save()
+
     def remove_sheet(self, sheet: Sheet) -> None:
         self.sheets.remove(sheet)
 
@@ -485,8 +496,9 @@ class Dataset:
 
     def save(self):
         # make backup & delete
-        shutil.copy(os.path.join(self.path, self.filename), os.path.join(self.path, self.backup_name))
-        os.remove(os.path.join(self.path, self.filename))
+        if os.path.isfile(os.path.join(self.path, self.filename)):
+            shutil.copy(os.path.join(self.path, self.filename), os.path.join(self.path, self.backup_name))
+            os.remove(os.path.join(self.path, self.filename))
 
         # open new file
         filename = os.path.join(self.path, self.filename)
