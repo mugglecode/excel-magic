@@ -437,7 +437,7 @@ class Dataset:
         conn.commit()
         conn.close()
 
-    def safe_merge_file(self, path: str) -> None:
+    def merge_file(self, path: str, force: bool = False) -> None:
         workbook = xlrd.open_workbook(path)
         sheet: xlrd.sheet.Sheet
         for sheet in workbook.sheets():
@@ -455,7 +455,7 @@ class Dataset:
                 self._merge_table(sheet, tbl)
                 self.sheets.append(tbl)
 
-    def _merge_table(self, sheet, tbl):
+    def _merge_table(self, sheet, tbl, force: bool = False):
         flg_first_row = True
         for row in sheet.get_rows():
             # Skip header
