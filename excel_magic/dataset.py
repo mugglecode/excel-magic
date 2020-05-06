@@ -9,8 +9,6 @@ import shutil
 import xlsxwriter
 import csv
 import json
-from excel_magic.chromium_downloader import check_chromium, download_chromium
-import requests
 
 __all__ = ['Sheet', 'Dataset', 'open_file']
 
@@ -268,30 +266,6 @@ class Sheet:
             data.append(v)
         with open(out, 'w') as f:
             json.dump(data, f)
-
-    def to_pdf(self, out='out.pdf', config=''):
-        if not (os.path.isfile('render-pea') or os.path.isfile('render-pea.exe')):
-            # raise FileNotFoundError('render-pea plugin is not present')
-            if sys.platform == 'darwin':
-                filename = 'render-pea'
-            else:
-                filename = 'render-pea.exe'
-            url = '' + sys.platform + filename
-            file = requests.get(url)
-            with open(filename, 'wb') as f:
-                f.write(file.content)
-        if not check_chromium():
-            download_chromium()
-
-        if sys.platform.startswith('win'):
-            cmd = f'render-pea.exe "{self.filename}" --name "{self.name}" --out "{out}"'
-        else:
-            cmd = f'./render-pea "{self.filename}" --name "{self.name}" --out "{out}"'
-        if config != '':
-            cmd += f' --config "{config}"'
-        print(cmd)
-        a = os.popen(cmd)
-        print(a)
 
     def split_rows(path: str, row_count: int, name_by: str):
         filenames = {}
