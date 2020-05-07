@@ -2,6 +2,7 @@ import datetime
 import sys
 from copy import copy
 import sqlite3
+from io import BytesIO
 import xlrd
 from typing import Callable, Union, List, Any
 import os
@@ -9,6 +10,7 @@ import shutil
 import xlsxwriter
 import csv
 import json
+from PIL import Image
 
 __all__ = ['Sheet', 'Dataset', 'open_file']
 
@@ -103,6 +105,12 @@ class Cell:
                     return self.value == float(other)
                 return self.value is other
 
+
+class ImageCell(Cell):
+    def __init__(self, value, data: BytesIO):
+        super().__init__()
+        self.data = data
+        self.value = value
 
 class Sheet:
     def __init__(self, path: str, sheet: Union[xlrd.sheet.Sheet, str] = ''):
@@ -468,7 +476,7 @@ class Dataset:
     def remove_sheet_by_index(self, index: int):
         pass
 
-    def save(self, backup = True):
+    def save(self, backup = True, row_height = 0, col_width = 0):
         # make backup & delete
         if os.path.isfile(os.path.join(self.path, self.filename)) and backup:
             shutil.copy(os.path.join(self.path, self.filename), os.path.join(self.path, self.backup_name))
@@ -490,7 +498,22 @@ class Dataset:
                     if isinstance(data.value, datetime.datetime):
                         sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
                     else:
-                        sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
+                        if isinstance(data, ImageCell):
+                            sheet.insert_image(pointer.row, pointer.col, data.value, {'image_data': data.data, 'y_offset': 10})
+                            data.data.seek(0)
+                            img: Image.Image = Image.open(data.data)
+                            width, height = img.size
+                            if row_height == 0:
+                                sheet.set_row(pointer.row, height)
+                            else:
+                                sheet.set_row(pointer.row, row_height)
+                            if col_width != 0:
+                                sheet.set_column(pointer.col, pointer.col, (col_width / 7.5))
+                            else:
+                                sheet.set_column(pointer.col, pointer.col, (width / 7.5))
+
+                        else:
+                            sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
                     pointer.next_col()
                 pointer.next_row()
         workbook.close()
