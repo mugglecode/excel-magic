@@ -107,10 +107,10 @@ class Cell:
 
 
 class ImageCell(Cell):
-    def __init__(self, data: BytesIO, value=''):
+    def __init__(self, data: Union[BytesIO, str]):
         super().__init__()
         self.data = data
-        self.value = value
+        self.value = ''
 
 class Sheet:
     def __init__(self, path: str, sheet: Union[xlrd.sheet.Sheet, str] = ''):
@@ -503,8 +503,11 @@ class Dataset:
                         sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
                     else:
                         if isinstance(data, ImageCell):
-                            sheet.insert_image(pointer.row, pointer.col, data.value, {'image_data': data.data, 'y_offset': 10, 'x_offset': 10})
-                            data.data.seek(0)
+                            if isinstance(data.data, str):
+                                sheet.insert_image(pointer.row, pointer.col, data.data, {'y_offset': 10, 'x_offset': 10})
+                            else:
+                                data.data.seek(0)
+                                sheet.insert_image(pointer.row, pointer.col, data.value, {'image_data': data.data, 'y_offset': 10, 'x_offset': 10})
                             img: Image.Image = Image.open(data.data)
                             width, height = img.size
                             if row_height == 0:
