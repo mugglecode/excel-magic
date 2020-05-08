@@ -107,7 +107,7 @@ class Cell:
 
 
 class ImageCell(Cell):
-    def __init__(self, value, data: BytesIO):
+    def __init__(self, data: BytesIO, value=''):
         super().__init__()
         self.data = data
         self.value = value
@@ -192,7 +192,7 @@ class Sheet:
 
         return data_list
 
-    def append_row(self, content: Union[dict, List[str]]) -> None:
+    def append_row(self, content: Union[dict, List[Union[str, Cell]]]) -> None:
         new_row = {}
         if isinstance(content, dict):
             for field in self.fields:
@@ -205,7 +205,11 @@ class Sheet:
                     new_row[field] = Cell('')
         elif isinstance(content, list):
             for i in range(len(self.fields)):
-                new_row[self.fields[i]] = Cell(content[i])
+                if isinstance(content[i], Cell):
+                    new_row[self.fields[i]] = content[i]
+                else:
+                    new_row[self.fields[i]] = Cell(content[i])
+
             if len(content) < len(self.fields):
                 for i in range(len(content) - 1, len(self.fields)):
                     new_row[self.fields[i]] = Cell('')
@@ -499,7 +503,7 @@ class Dataset:
                         sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
                     else:
                         if isinstance(data, ImageCell):
-                            sheet.insert_image(pointer.row, pointer.col, data.value, {'image_data': data.data, 'y_offset': 10})
+                            sheet.insert_image(pointer.row, pointer.col, data.value, {'image_data': data.data, 'y_offset': 10, 'x_offset': 10})
                             data.data.seek(0)
                             img: Image.Image = Image.open(data.data)
                             width, height = img.size
@@ -508,9 +512,9 @@ class Dataset:
                             else:
                                 sheet.set_row(pointer.row, row_height)
                             if col_width != 0:
-                                sheet.set_column(pointer.col, pointer.col, (col_width / 7.5))
+                                sheet.set_column(pointer.col, pointer.col, (col_width / 8))
                             else:
-                                sheet.set_column(pointer.col, pointer.col, (width / 7.5))
+                                sheet.set_column(pointer.col, pointer.col, (width / 8))
 
                         else:
                             sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
