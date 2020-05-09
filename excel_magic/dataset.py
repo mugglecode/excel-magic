@@ -154,7 +154,16 @@ class Sheet:
                 # to prevent bug when there is an empty cell
                 if i < len(row):
                     if row[i].ctype == 3:
-                        c = Cell(datetime.datetime(*xlrd.xldate_as_tuple(row[i].value, sheet.book.datemode)))
+                        dt = [*xlrd.xldate_as_tuple(row[i].value, sheet.book.datemode)]
+                        try:
+                            if dt[0] == 0 or dt[1] == 0 or dt[2] == 0:
+                                c = Cell(datetime.time(dt[3], dt[4], dt[5]))
+                            elif dt[3] == 0 and dt[4] == 0 and dt[5] == 0:
+                                c = Cell(datetime.date(dt[0], dt[1], dt[2]))
+                            else:
+                                c = Cell(datetime.datetime(*dt))
+                        except:
+                            c = Cell(datetime.datetime(*dt))
                         c.style.num_format = 'yyyy/mm/dd'
                         new_row[self.fields[i]] = c
                     else:
@@ -510,11 +519,11 @@ class Dataset:
             pointer.next_row()
             for data_row in table.data_rows:
                 for data in data_row.values():
-                    if isinstance(data.value, datetime.datetime):
-                        if data.value.time().min == 0 and data.value.time().hour == 0 and data.value.time().second == 0:
-                            sheet.write(pointer.row, pointer.col, str(data.value.date().isoformat()), workbook.add_format(data.attr()))
-                        elif data.value.date().year == 0 and data.value.date().month == 0 and data.value.date().day == 0:
-                            sheet.write(pointer.row, pointer.col, str(data.value.time().isoformat()), workbook.add_format(data.attr()))
+                    if isinstance(data.value, datetime.date) or isinstance(data.value, datetime.time) or isinstance(data.value, datetime.datetime):
+                        if isinstance(data.value, datetime.date):
+                            sheet.write(pointer.row, pointer.col, str(data.value.isoformat()), workbook.add_format(data.attr()))
+                        elif isinstance(data.value, datetime.time):
+                            sheet.write(pointer.row, pointer.col, str(data.value.isoformat()), workbook.add_format(data.attr()))
                         else:
                             sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
                     else:
