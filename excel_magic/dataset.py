@@ -76,11 +76,22 @@ class Header:
 
 class Cell:
     def __init__(self, value: Any = '', style: Style = None):
-        self.value = value
+        self._value = value
         if style is None:
             self.style = Style()
         else:
             self.style = style
+
+    @property
+    def value(self):
+        if isinstance(self._value, float) and self._value % 1 == 0:
+            return int(self._value)
+        else:
+            return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
 
     def set_style(self, style: Style):
         self.style = style
