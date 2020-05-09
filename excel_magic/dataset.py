@@ -512,9 +512,9 @@ class Dataset:
                 for data in data_row.values():
                     if isinstance(data.value, datetime.datetime):
                         if data.value.time().min == 0 and data.value.time().hour == 0 and data.value.time().second == 0:
-                            sheet.write(pointer.row, pointer.col, str(data.value.date()), workbook.add_format(data.attr()))
+                            sheet.write(pointer.row, pointer.col, str(data.value.date().isoformat()), workbook.add_format(data.attr()))
                         elif data.value.date().year == 0 and data.value.date().month == 0 and data.value.date().day == 0:
-                            sheet.write(pointer.row, pointer.col, str(data.value.time()), workbook.add_format(data.attr()))
+                            sheet.write(pointer.row, pointer.col, str(data.value.time().isoformat()), workbook.add_format(data.attr()))
                         else:
                             sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
                     else:
