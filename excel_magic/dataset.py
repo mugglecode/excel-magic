@@ -65,6 +65,7 @@ class Style:
             attr['bg_color'] = self.fill_color
         if self.num_format != '':
             attr['num_format'] = self.num_format
+        return attr
 
 
 class Header:
