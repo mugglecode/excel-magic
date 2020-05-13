@@ -1,143 +1,337 @@
 # Excel MAGIC
 
-Do magic to your excel file!
+> Simplify common Excel operations.
 
-# Use Case
+  
+![Logo](https://raw.githubusercontent.com/guo40020/excel-magic/master/logo.png)  
+[![PyPI version](https://badge.fury.io/py/excelmagic.svg )](https://pypi.org/project/excelmagic)
 
-## CRUD using Dataset
 
-let's say we have a file like this:
+## Installation
 
-| id  | name     | age |
-| --- | -------- | --- |
-| 1   | John Doe | 12  |
-| 2   | Kelly    | 18  |
+```shell script
+pip install excelmagic
+```
+
+## Usage example
+
+### Open Excel
 
 ```python
-from excel_magic.dataset import Dataset
-ds = Dataset('a_file.xlsx')
-table = ds.get_sheet(0)
-search_results = table.find(name='John Doe')
-table.remove(search_results[0])
-search_results[1]['name'] = 'Vicky'
-# we can leave age empty if we do it like this!
-table.append({'id': '3', 'name': 'Dick'})
-# we can use filter if we have even more complex conditions
-filter_results = table.filter(lambda row: row['age'] is '')
-# don't forget to save!
-ds.save()
+from excel_magic.dataset import open_file
+
+file = open_file('test.xlsx')
+```
+
+Also supports **with** statement:
+
+```python
+from excel_magic.dataset import open_file
+
+with open_file('test.xlsx') as file:
+        pass
+```
+
+### Query rows
+
+Example data like this:
+
+| Id  | Name  | Age | Score |
+| --- | ----- | --- | ----- |
+| 1   | John  | 22  | 89    |
+| 2   | David | 23  | 93    |
+| 3   | Emma  | 22  | 95    |
+
+Query rows of a sheet in an excel file with **specific cell value**:
+
+```python
+from excel_magic.dataset import open_file
+
+with open_file('test.xlsx') as excel:
+      # select a sheet by index or sheet name
+    sheet = excel.get_sheet_by_index(0)
+    # find rows containing the name 'David'
+    rows = sheet.find(Name='David')
+```
+
+Or query rows by **callback function**:
+
+```python
+from excel_magic.dataset import open_file
+
+def score_over_90(rows):
+        if rows['Score'].value > 90:
+            return True
+
+with open_file('test.xlsx') as excel:
+    sheet = excel.get_sheet_by_index(0)
+    # find rows with the score column greater than 90
+    rows = sheet.filter(score_over_90)
+```
+
+### Get cell value from the row
+
+You can use `key: value` method to get the cell object in a rod, like operating a dict.
+
+```python
+cell = row['Score']
+```
+
+And get the value of the cell object through the **value attribute**.
+
+```python
+score_num = cell.value
+```
+
+### Split sheets
+
+Split multiple sheets of excel file to independent excel files.
+
+```python
+from excel_magic.dataset import open_file
+
+file = open_file('test.xlsx')
+file.split_sheets_to_files()
+```
+
+### Merge files
+
+Combine sheets from multiple files into a new excel file.
+
+```python
+from excel_magic.dataset import open_file
+
+excel_files = ['01.xlsx', '02.xlsx', '03.xlsx']
+
+new_excel = open_file('test.xlsx')
+for file in excel_files:
+    new_excel.merge_file(file)
+new_excel.save()
+```
+
+Or
+
+```python
+from excel_magic.dataset import open_file
+
+excel_files = ['01.xlsx', '02.xlsx', '03.xlsx']
+
+with open_file('test.xlsx') as new_excel:
+    for file in excel_files:
+        new_excel.merge_file(file)
 ```
 
 ## API Reference
 
----
+The hierarchical relationship in the excel file is:
 
-## dataset Module
+> Excel (sheets) → Sheet → Row → Cell
 
-### Style
+And excelmagic provides similar hierarchical object API:
 
-represents the style of a cell
+> Dataset Object → Sheet Object → Row Object → Cell Object
 
-| attribute            | description                         | default |
-| -------------------- | ----------------------------------- | ------- |
-| horizontal_alignment | how text align in a cell            | left    |
-| vertical_alignment   | how text align vertically in a cell | top     |
-| bold                 | is text bold                        | False   |
-| underline            | is text underlined                  | False   |
-| font_color           | color of the font                   | black   |
-| font_name            | name of the font                    | Calibri |
-| font_size            | font size                           | 12      |
-| fill_color           | fill color                          | ''      |
+### Dataset Object
 
-### Cell
+**Example:**
 
-- `set_style(style: Style)`
+```python
+from excel_magic.dataset import open_file
+
+dataset = open_file('test.xlsx')
+```
+
+**Methods:**
+
+Search Sheet
+
+- `get_sheet_by_index(index: int) -> Sheet`
+  - get a sheet object by sheet index.
+- `get_sheet_by_name(name: str) -> Sheet`
+  - get a sheet object by sheet name.
+- `does_exist(name: str) -> bool`
+  - check if sheet name exists in your Dataset.
+
+Create Sheet
+
+- `add_sheet(name: str, fields: List[str]) -> Sheet`
+  - append new sheet with sheet name and column headers.
+
+Delete Sheet
+
+- `remove_sheet(sheet: Sheet) -> None`
+  - remove a sheet by passing a sheet object.
+
+Others
+
+- `save() -> None`
   
-  - se style of the cell
+  - save changes.
 
-### Dataset
-
-- `get_sheet(index: int)`
+- `split_sheets_to_files() -> None`
   
-  - get sheet by index
+  - split multiple sheets to independent excel files.
 
-- `get_sheet_by_name(name: str)`
+- `merge_file(path: str) -> None`
   
-  - get sheet by name
+  - merge another excel file to the current file.
 
-- `does_exist(name: str)`
+- `export_json(out: str) -> None`
   
-  - check if a sheet exists
+  - export all sheets to a json file.
 
-- `merge_file(path: str)`
-  
-  - merge another file to the current file
-     
-- `export_json(out: str)`
-  - export all sheets to a json file
+### Sheet Object
 
-- `remove_sheet(sheet: Sheet)`
-  
-  - remove a sheet
+**Example:**
 
-- `save()`
-  
-  - save your stuff
+```python
+from excel_magic.dataset import open_file
 
-### Sheet
+dataset = open_file('test.xlsx')
+sheet = dataset.get_sheet_by_index(0)
+```
 
-- `find(**kwargs)`
-  
-  - find a list of rows
+**Methods:**
 
-- `filter(callback)`
-  
-  - return a list of rows, filter by the callback function. return True if you want it
+Search  rows
 
-- `append_row(content: Union[dict, List[str]])`
-  
-  - add a row to your file, dict keys should be your headers
-
-- `remove(row: dict)`
-  
-  - remove a row
-
-- `set_header_style(style: Style)`
-  
-  - set style of the header
-  
+- `find(**kwargs: dict[str, Any]) -> List[dict]`
+  - return list of row which is essentially a dict.
+- `filter(callback: Callable[[dict], Union[None, bool]]) -> List[dict]`
+  - return list of row, filter by the callback function with which return True. And the callback receives row object (a dict) as parameter.
 - `get_rows() -> List[dict]`
-  - get all rows
-  
-- `print_row(index: int) -> str`
-  - return a string of a row ready to be print
+  - return a list of all rows.
 
-- `set_row_style(row: Union[dict, int], style: Style)`
-  
-  - set style of a row
+Create row
 
-- `to_csv(out: str = '')`
-  
-  - Convert sheet to csv
+- `append_row(content: Union[dict, List[str]]) -> None`
+  - append a row to your file. If you use dict-type parameter, the keys should be same as your column headers.
 
-- `to_json(out: str = '')`
-  
-  - Convert sheet to json
+Delete row
 
+- `remove_row(row: dict) -> None`
+  - find and delete a row according to dict key and value.
+
+Export and Import sheet
+
+- `to_csv(out: str = '') -> None`
+  - export the sheet to csv file.
+- `to_json(out: str = '') -> None`
+  - export the sheet to json file.
 - `import_json(path: str)`
-  - Import data from a json file
+  - Import a json file and insert into the sheet.
+
+Others:
+
+- `print_row(index: int) -> str`
+  
+  - return a string of a row ready to be print.
 
 - `beautify(by: str) -> List[dict]`
-  - Group data by a column
-
-## utils Module
-
-### Document
-
-- `split_sheets(out='', out_prefix='')`
   
-  - split file by sheets
+  - group data by column header.
 
-- `split_rows(row_count: int, out='', out_prefix='')`
+- `set_header_style(style: Style) -> None`
   
-  - split file by rows
+  - set style of the header.
+
+- `set_row_style(row: Union[dict, int], style: Style) -> None`
+  
+  - set style of a row.
+
+### Row Object
+
+**Example:**
+
+```python
+from excel_magic.dataset import open_file
+
+dataset = open_file('test.xlsx')
+sheet = dataset.get_sheet_by_index(0)
+rows = sheet.find(Name='David')   # return a list of found row object
+```
+
+**Methods:**
+
+The row object is dict-type, with column headers as its key and cell object as the value.
+
+So you can get the cell object of a row with `row[key]` or `row.get(key)`, like dict type dose.
+
+Read cell
+
+- `row[key].value`
+
+Update cell
+
+- `row[key].value = new_value`
+
+Delete cell
+
+- `row[key].value = ''`
+
+### Cell Object
+
+**Example:**
+
+```python
+from excel_magic.dataset import open_file
+
+dataset = open_file('test.xlsx')
+sheet = dataset.get_sheet_by_index(0)
+rows = sheet.find(Name='David')   # return a list of found row object
+cell = rows[0].get('Score')   # then use value attribute to get the value of a cell
+score = cell.value
+```
+
+**Attributes:**
+
+- `value` 
+  - get the value of cell object
+
+**Methods:**
+
+- `set_style(style: Style) -> None`
+  - passing style object, set the style of the cell
+
+### Style Object
+
+Create the style object for cells.
+
+**Example:**
+
+```python
+from excel_magic.dataset import Style
+
+my_style = Style()
+my_style.fill_color = '#52de97'
+my_style.font_size = 20
+my_style.bold = True
+
+cell.set_style(my_style)
+```
+
+The following attributes have been supported:
+
+| Attribute            | Optional Value                                | Default Value |
+|:-------------------- |:--------------------------------------------- |:------------- |
+| font_color           | 'red' or '(255, 0, 0)' or '#FF0000' ...       | 'black'       |
+| fill_color           | 'red' or '(255, 0, 0)' or '#FF0000' ...       | ''            |
+| font_name            | 'Calibri' or 'Times New Roman' or 'Arial' ... | 'Calibri'     |
+| font_size            | 12 or '12' ...                                | 12            |
+| bold                 | True or False                                 | False         |
+| underline            | True or False                                 | False         |
+| horizontal_alignment | 'left' or 'center' or 'right'                 | 'left'        |
+| vertical_alignment   | 'top' or 'center' or 'bottom'                 | 'top'         |
+
+## Built With
+
+- [xlrd](https://pypi.org/project/xlrd/) - Some statement
+- [xlsxwriter](https://pypi.org/project/XlsxWriter/) - Some statement
+
+## 
+
+## Authors
+
+Kelly 
+
+See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
