@@ -13,9 +13,9 @@
 pip install excelmagic
 ```
 
-## Usage example
+## Usage
 
-### Open Excel
+### Opening an Excel file
 
 ```python
 from excel_magic.dataset import open_file
@@ -34,7 +34,7 @@ with open_file('test.xlsx') as file:
 
 ### Query rows
 
-Example data like this:
+Example data:
 
 | Id  | Name  | Age | Score |
 | --- | ----- | --- | ----- |
@@ -54,7 +54,7 @@ with open_file('test.xlsx') as excel:
     rows = sheet.find(Name='David')
 ```
 
-Or query rows by **callback function**:
+Or query rows with **callback function**:
 
 ```python
 from excel_magic.dataset import open_file
@@ -69,7 +69,7 @@ with open_file('test.xlsx') as excel:
     rows = sheet.filter(score_over_90)
 ```
 
-### Get cell value from the row
+### Getting cell values from a row
 
 You can use `key: value` method to get the cell object in a rod, like operating a dict.
 
@@ -77,7 +77,7 @@ You can use `key: value` method to get the cell object in a rod, like operating 
 cell = row['Score']
 ```
 
-And get the value of the cell object through the **value attribute**.
+And get the value of the cell object through the **`value` attribute**.
 
 ```python
 score_num = cell.value
@@ -96,7 +96,7 @@ file.split_sheets_to_files()
 
 ### Merge files
 
-Combine sheets from multiple files into a new excel file.
+Combine sheets from files into a new excel file.
 
 ```python
 from excel_magic.dataset import open_file
@@ -325,10 +325,9 @@ The following attributes have been supported:
 
 ## Built With
 
-- [xlrd](https://pypi.org/project/xlrd/) - Some statement
-- [xlsxwriter](https://pypi.org/project/XlsxWriter/) - Some statement
+- [xlrd](https://pypi.org/project/xlrd/)
+- [xlsxwriter](https://pypi.org/project/XlsxWriter/) 
 
-## 
 
 ## Authors
 
