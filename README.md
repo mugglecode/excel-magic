@@ -48,7 +48,7 @@ Query rows of a sheet in an excel file with **specific cell value**:
 from excel_magic.dataset import open_file
 
 with open_file('test.xlsx') as excel:
-      # select a sheet by index or sheet name
+    # select a sheet by index or sheet name
     sheet = excel.get_sheet_by_index(0)
     # find rows containing the name 'David'
     rows = sheet.find(Name='David')
@@ -60,8 +60,8 @@ Or query rows with **callback function**:
 from excel_magic.dataset import open_file
 
 def score_over_90(rows):
-        if rows['Score'].value > 90:
-            return True
+    if rows['Score'].value > 90:
+        return True
 
 with open_file('test.xlsx') as excel:
     sheet = excel.get_sheet_by_index(0)
