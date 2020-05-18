@@ -366,7 +366,7 @@ class Dataset:
 
             cell_pattern = re.compile(r'<c [A-z\": =0-9]*>[<>A-z0-9/.+\-*]*</c>')
             row_notation_pattern = re.compile(r'r=\"([A-Z0-9]*)\"')
-            function_pattern = re.compile(r'<f>([=A-z0-9+\-*/:()]*)</f>')
+            function_pattern = re.compile(r'(?<=<f>)([\s\S]*)(?=</f>)')
             sheet_counter = 0
             for xml in sheets_xml:
                 loaded_sheet = self.sheets[sheet_counter]
