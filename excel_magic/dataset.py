@@ -1,10 +1,12 @@
 import datetime
+import re
 import sys
+import zipfile
 from copy import copy
 import sqlite3
 from io import BytesIO
 import xlrd
-from typing import Callable, Union, List, Any
+from typing import Callable, Union, List, Any, Tuple
 import os
 import shutil
 import xlsxwriter
@@ -123,6 +125,13 @@ class ImageCell(Cell):
         super().__init__()
         self.data = data
         self.value = ''
+
+
+class FormulaCell(Cell):
+    def __init__(self, value: Any = '', formula: str = '', style: Style = None):
+        super().__init__()
+        self.formula = formula
+
 
 class Sheet:
     def __init__(self, path: str, sheet: Union[xlrd.sheet.Sheet, str] = ''):
@@ -327,7 +336,7 @@ class Sheet:
 
 class Dataset:
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, catch_formulas=False):
         if not os.path.isfile(path):
             wb = xlsxwriter.Workbook(path)
             wb.close()
@@ -344,6 +353,63 @@ class Dataset:
                 continue
             self.sheets.append(Sheet(path, sheet))
             self.workbook.unload_sheet(sheet.name)
+        self.workbook.release_resources()
+
+        # Catch Formula
+        if catch_formulas:
+            sheets_xml = []
+            with open(path, 'rb') as f:
+                zip = zipfile.ZipFile(f, compression=zipfile.ZIP_DEFLATED)
+                for i in range(self.workbook.nsheets):
+                    xml_content = zip.read(f'xl/worksheets/sheet{i+1}.xml')
+                    sheets_xml.append(xml_content)
+
+            cell_pattern = re.compile(r'<c [A-z\": =0-9]*>[<>A-z0-9/.+\-*]*</c>')
+            row_notation_pattern = re.compile(r'r=\"([A-Z0-9]*)\"')
+            function_pattern = re.compile(r'<f>([=A-z0-9+\-*/:()]*)</f>')
+            sheet_counter = 0
+            for xml in sheets_xml:
+                loaded_sheet = self.sheets[sheet_counter]
+                xml = xml.decode()
+
+                cells = cell_pattern.findall(xml)
+                formula_cells = []
+                for c in cells:
+                    if '<f>' in c:
+                        formula_cells.append(c)
+                cells.clear()
+
+                for c in formula_cells:
+                    pos = self._resolve_cell_notation(row_notation_pattern.search(c).group(1))
+                    formula = function_pattern.search(c).group(1)
+
+                    row = loaded_sheet.data_rows[pos[0] - 1]
+                    cell_value = row[loaded_sheet.fields[pos[1]]].value
+                    row[loaded_sheet.fields[pos[1]]] = FormulaCell(formula=formula, value=cell_value)
+
+                sheet_counter += 1
+
+    def _resolve_cell_notation(self, s: str) -> Tuple[int, int]:
+        """
+        convert cell notation to (row, col) tuple
+        :param s: Cell Notation
+        :return: (row, col)
+        """
+        letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        col: str = ''
+        row: Union[str, int]
+        i = 0
+        for i in range(len(s)):
+            if s[i].isalpha():
+                col += s[i]
+        row = s[i:]
+        row = int(row)
+        real_col = 0
+        # resolve col
+        for i in range(len(col)):
+            real_col += 26 ** (len(col) - 1 - i) * (letters.index(col[i]) + 1)
+
+        return row - 1, real_col - 1
 
     def get_sheet_by_index(self, index: int) -> Sheet:
         return self.sheets[index]
@@ -520,14 +586,19 @@ class Dataset:
             pointer.next_row()
             for data_row in table.data_rows:
                 for data in data_row.values():
-                    if isinstance(data.value, datetime.date) or isinstance(data.value, datetime.time) or isinstance(data.value, datetime.datetime):
+                    if isinstance(data.value, datetime.date) \
+                            or isinstance(data.value, datetime.time) \
+                            or isinstance(data.value, datetime.datetime):
+
                         if isinstance(data.value, datetime.date):
                             sheet.write(pointer.row, pointer.col, str(data.value.isoformat()), workbook.add_format(data.attr()))
                         elif isinstance(data.value, datetime.time):
                             sheet.write(pointer.row, pointer.col, str(data.value.isoformat()), workbook.add_format(data.attr()))
                         else:
                             sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
+
                     else:
+
                         if isinstance(data, ImageCell):
                             if isinstance(data.data, str):
                                 sheet.insert_image(pointer.row, pointer.col, data.data, {'y_offset': 10, 'x_offset': 10})
@@ -545,6 +616,8 @@ class Dataset:
                             else:
                                 sheet.set_column(pointer.col, pointer.col, (width / 8))
 
+                        elif isinstance(data, FormulaCell):
+                            sheet.write_formula(pointer.row, pointer.col, data.formula, workbook.add_format(data.attr()))
                         else:
                             sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
                     pointer.next_col()
@@ -558,5 +631,5 @@ class Dataset:
         return self
 
 
-def open_file(path: str) -> Dataset:
-    return Dataset(path)
+def open_file(path: str, catch_formulas=False) -> Dataset:
+    return Dataset(path, catch_formulas=catch_formulas)
