@@ -356,7 +356,7 @@ class Dataset:
         self.workbook.release_resources()
 
         # Catch Formula
-        if catch_formulas:
+        if catch_formulas and len(self.sheets) != 0:
             sheets_xml = []
             with open(path, 'rb') as f:
                 zip = zipfile.ZipFile(f, compression=zipfile.ZIP_DEFLATED)
