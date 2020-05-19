@@ -364,8 +364,9 @@ class Dataset:
                     xml_content = zip.read(f'xl/worksheets/sheet{i+1}.xml')
                     sheets_xml.append(xml_content)
 
-            cell_pattern = re.compile(r'<c [A-z\": =0-9]*>[<>A-z0-9/.+\-*]*</c>')
-            row_notation_pattern = re.compile(r'r=\"([A-Z0-9]*)\"')
+            # MAGIC! DO NOT TOUCH
+            cell_pattern = re.compile(r'<c [A-z\": =0-9]*>[<>A-z0-9/.+\-*\u4e00-\u9fa5!:@#$%^&\[\]{}?\';\"(),]*</c>')
+            cell_notation_pattern = re.compile(r'r=\"([A-Z0-9]*)\"')
             function_pattern = re.compile(r'(?<=<f>)([\s\S]*)(?=</f>)')
             sheet_counter = 0
             for xml in sheets_xml:
@@ -380,7 +381,7 @@ class Dataset:
                 cells.clear()
 
                 for c in formula_cells:
-                    pos = self._resolve_cell_notation(row_notation_pattern.search(c).group(1))
+                    pos = self._resolve_cell_notation(cell_notation_pattern.search(c).group(1))
                     formula = function_pattern.search(c).group(1)
 
                     row = loaded_sheet.data_rows[pos[0] - 1]
