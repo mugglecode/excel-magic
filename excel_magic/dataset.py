@@ -1,6 +1,5 @@
 import datetime
 import re
-import sys
 import zipfile
 from copy import copy
 import sqlite3
@@ -134,11 +133,12 @@ class FormulaCell(Cell):
 
 
 class Sheet:
-    def __init__(self, path: str, sheet: Union[xlrd.sheet.Sheet, str] = ''):
+    def __init__(self, path: str, suppress_warning: bool, sheet: Union[xlrd.sheet.Sheet, str] = ''):
         self.fields = []
         self.data_rows: List[dict] = []
         self.header_style: Style = Style()
         self.filename = path
+        self.suppress_warning = suppress_warning
         if isinstance(sheet, str):
             self.name: str = sheet
         else:
@@ -179,7 +179,8 @@ class Sheet:
                     else:
                         if isinstance(row[i].value, str):
                             if row[i].value.isnumeric():
-                                print('Warning: Found a number stored in string format, converting...')
+                                if not self.suppress_warning:
+                                    print('Warning: Found a number stored in string format, converting...')
                                 new_row[self.fields[i]] = Cell(float(row[i].value))
                         new_row[self.fields[i]] = Cell(row[i].value)
                 else:
@@ -352,7 +353,7 @@ class Sheet:
 
 class Dataset:
 
-    def __init__(self, path: str, catch_formulas=False):
+    def __init__(self, path: str, catch_formulas=False, suppress_warning=False):
         if not os.path.isfile(path):
             wb = xlsxwriter.Workbook(path)
             wb.close()
@@ -361,13 +362,14 @@ class Dataset:
         self.filename = os.path.basename(path)
         self.backup_name = self.filename + '.bak'
         self.path = os.path.dirname(path)
+        self.suppress_warning = suppress_warning
         sheet: xlrd.sheet.Sheet
         for sheet in self.workbook.sheets():
             try:
                 sheet.row(0)
             except IndexError:
                 continue
-            self.sheets.append(Sheet(path, sheet))
+            self.sheets.append(Sheet(path, self.suppress_warning, sheet))
             self.workbook.unload_sheet(sheet.name)
         self.workbook.release_resources()
 
@@ -464,7 +466,7 @@ class Dataset:
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
         if self.does_exist(name):
             raise Exception('Sheet already exists')
-        table = Sheet(self.filename, name)
+        table = Sheet(self.filename, self.suppress_warning, name)
         table.fields = fields
         self.sheets.append(table)
         return table
@@ -647,5 +649,5 @@ class Dataset:
         return self
 
 
-def open_file(path: str, catch_formulas=False) -> Dataset:
+def open_file(path: str, catch_formulas=False, suppress_warning=False) -> Dataset:
     return Dataset(path, catch_formulas=catch_formulas)
