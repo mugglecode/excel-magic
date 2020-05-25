@@ -548,7 +548,7 @@ class Dataset:
                     tbl.fields.extend(headers_to_merge)
                 self._merge_table(sheet, tbl)
             else:
-                tbl = Sheet(self.filename, sheet.name)
+                tbl = Sheet(self.filename, self.suppress_warning, sheet.name)
                 try:
                     headers = sheet.row(0)
                 except IndexError:
