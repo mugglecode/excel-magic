@@ -650,4 +650,4 @@ class Dataset:
 
 
 def open_file(path: str, catch_formulas=False, suppress_warning=False) -> Dataset:
-    return Dataset(path, catch_formulas=catch_formulas)
+    return Dataset(path, catch_formulas=catch_formulas, suppress_warning=suppress_warning)
