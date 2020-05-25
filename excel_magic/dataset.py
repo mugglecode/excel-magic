@@ -312,6 +312,22 @@ class Sheet:
     def split_rows(path: str, row_count: int, name_by: str):
         filenames = {}
 
+    def sort_by(self, by: str, desc=False):
+        copied = [*self.data_rows]
+        result = []
+        for i in range(len(self.data_rows)):
+            min = copied[0]
+            for j in range(len(copied)):
+                if desc:
+                    if copied[j][by].value > min[by].value:
+                        min = copied[j]
+                else:
+                    if copied[j][by].value < min[by].value:
+                        min = copied[j]
+            copied.remove(min)
+            result.append(min)
+        return result
+
     def beautify(self, by: str) -> List[dict]:
         if isinstance(by, str):
             grouped = []
@@ -495,7 +511,6 @@ class Dataset:
     def to_sqlite(self, out: str):
         conn = sqlite3.connect(out)
         cur = conn.cursor()
-        current_table = ''
         for sheet in self.sheets:
             current_table = sheet.name
             cmd = f"CREATE TABLE '{current_table}' ({','.join(sheet.fields)})"
@@ -541,7 +556,7 @@ class Dataset:
                 self._merge_table(sheet, tbl)
                 self.sheets.append(tbl)
 
-    def _merge_table(self, sheet, tbl, force: bool = False):
+    def _merge_table(self, sheet, tbl):
         flg_first_row = True
         for row in sheet.get_rows():
             # Skip header
@@ -568,7 +583,7 @@ class Dataset:
     def remove_sheet_by_index(self, index: int):
         pass
 
-    def save(self, backup = True, row_height = 0, col_width = 0):
+    def save(self, backup=True, row_height=0, col_width=0):
         # make backup & delete
         if os.path.isfile(os.path.join(self.path, self.filename)) and backup:
             shutil.copy(os.path.join(self.path, self.filename), os.path.join(self.path, self.backup_name))
