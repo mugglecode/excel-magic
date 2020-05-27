@@ -269,6 +269,13 @@ class Sheet:
             result.append(row[col])
         return result
 
+    def append_col(self, col: str, default=''):
+        if col in self.fields:
+            raise ValueError('Duplicated col')
+        self.fields.append(col)
+        for row in self.data_rows:
+            row[col] = default
+
     def print_row(self, index: int):
         row = self.data_rows[index]
         result = ''
