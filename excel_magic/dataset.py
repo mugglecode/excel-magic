@@ -146,6 +146,12 @@ class Sheet:
             self._init_fields(sheet)
             self._init_data(sheet)
 
+    def __len__(self):
+        return self.data_rows.__len__()
+
+    def sheet_length(self):
+        return self.__len__()
+
     def _init_fields(self, sheet: xlrd.sheet.Sheet):
         fields_row = sheet.row(0)
         for field in fields_row:
@@ -247,6 +253,10 @@ class Sheet:
         else:
             raise TypeError('Expected dict or list}')
         self.data_rows.append(new_row)
+
+    def append_rows(self, rows: List[Union[dict, List]]):
+        for row in rows:
+            self.append_row(row)
 
     def get_rows(self) -> List[dict]:
         r = [*self.data_rows]
