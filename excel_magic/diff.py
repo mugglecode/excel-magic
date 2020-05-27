@@ -54,12 +54,12 @@ def diff(sheet_a: Sheet, sheet_b: Sheet) -> DiffSet:
     not_found_in_a: Sheet = Sheet(sheet='diff_a')
     not_found_in_a.fields = [*sheet_a.fields]
     for row in sheet_a.get_rows():
-        r = sheet_b.find(**row)
+        r = sheet_b.find(**row, none_if_not_found=True)
         if r is None:
             not_found_in_b.append_row(row)
 
     for row in sheet_b.get_rows():
-        r = sheet_a.find(**row)
+        r = sheet_a.find(**row, none_if_not_found=True)
         if r is None:
             not_found_in_a.append_row(row)
 
