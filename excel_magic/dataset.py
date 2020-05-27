@@ -133,11 +133,10 @@ class FormulaCell(Cell):
 
 
 class Sheet:
-    def __init__(self, path: str, suppress_warning: bool, sheet: Union[xlrd.sheet.Sheet, str] = ''):
+    def __init__(self, suppress_warning: bool = False, sheet: Union[xlrd.sheet.Sheet, str] = ''):
         self.fields = []
         self.data_rows: List[dict] = []
         self.header_style: Style = Style()
-        self.filename = path
         self.suppress_warning = suppress_warning
         if isinstance(sheet, str):
             self.name: str = sheet
@@ -379,7 +378,7 @@ class Dataset:
                 sheet.row(0)
             except IndexError:
                 continue
-            self.sheets.append(Sheet(path, self.suppress_warning, sheet))
+            self.sheets.append(Sheet(self.suppress_warning, sheet))
             self.workbook.unload_sheet(sheet.name)
         self.workbook.release_resources()
 
@@ -476,7 +475,7 @@ class Dataset:
     def add_sheet(self, name: str, fields: List[str]) -> Sheet:
         if self.does_exist(name):
             raise Exception('Sheet already exists')
-        table = Sheet(self.filename, self.suppress_warning, name)
+        table = Sheet(self.suppress_warning, name)
         table.fields = fields
         self.sheets.append(table)
         return table
@@ -558,7 +557,7 @@ class Dataset:
                     tbl.fields.extend(headers_to_merge)
                 self._merge_table(sheet, tbl)
             else:
-                tbl = Sheet(self.filename, self.suppress_warning, sheet.name)
+                tbl = Sheet(self.suppress_warning, sheet.name)
                 try:
                     headers = sheet.row(0)
                 except IndexError:
