@@ -195,7 +195,7 @@ class Sheet:
     def set_header_style(self, style: Style):
         self.header_style = style
 
-    def find(self, pairs: Union[dict, None] = None, **kwargs) -> List[dict]:
+    def find(self, pairs: Union[dict, None] = None, none_if_not_found=False, **kwargs) -> Union[List[dict], None]:
         result = []
         if pairs is not None:
             kwargs = pairs
@@ -212,10 +212,18 @@ class Sheet:
                     else:
                         continue
 
+                if isinstance(kwargs[key], Cell):
+                    if data_row[key].value != kwargs[key].value:
+                        break
+                    else:
+                        continue
+
                 if data_row[key].value != kwargs[key]:
                     break
             else:
                 result.append(data_row)
+        if result.__len__() == 0 and none_if_not_found:
+            return None
         return result
 
     def filter(self, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
