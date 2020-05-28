@@ -480,6 +480,13 @@ class Dataset:
         else:
             return False
 
+    def duplicate(self, name: str, headers_only: bool = False):
+        file = open_file(name)
+        for sheet in self.sheets:
+            sh = sheet.duplicate(sheet.name, headers_only)
+            file.sheets.append(sh)
+        return file
+
     def filter(self, table: Sheet, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
         return table.filter(callback)
 
