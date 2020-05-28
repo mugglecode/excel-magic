@@ -493,8 +493,8 @@ class Dataset:
         else:
             return False
 
-    def duplicate(self, name: str, headers_only: bool = False):
-        file = open_file(name)
+    def duplicate(self, path: str, headers_only: bool = False):
+        file = open_file(path)
         for sheet in self.sheets:
             sh = sheet.duplicate(sheet.name, headers_only)
             file.sheets.append(sh)
