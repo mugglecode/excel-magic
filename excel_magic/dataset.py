@@ -183,7 +183,7 @@ class Sheet:
                         new_row[self.fields[i]] = c
                     else:
                         if isinstance(row[i].value, str):
-                            if row[i].value.isnumeric():
+                            if row[i].value.isascii() and row[i].value.isnumeric():
                                 if not self.suppress_warning:
                                     print('Warning: Found a number stored in string format, converting...')
                                 new_row[self.fields[i]] = Cell(float(row[i].value))
@@ -295,9 +295,8 @@ class Sheet:
         if isinstance(row, int):
             row = self.data_rows[row]
 
-        c: Cell
         for c in row:
-            c.style = style
+            row[c].style = style
 
     def remove_row(self, row: dict) -> None:
         self.data_rows.remove(row)

@@ -16,6 +16,11 @@ class DiffSet:
         else:
             raise ValueError(f'There is no sheet {in_sheet}!')
 
+    def __str__(self):
+        return f'Summary: {self.not_found_in_b.__len__() + self.not_found_in_a.__len__()} differences in total.' \
+               f'\nnot found in a: {self.not_found_in_a.__len__()}' \
+               f'\nnot found in b: {self.not_found_in_b.__len__()}'
+
 
 class StrictDiffRow:
     def __init__(self, row_a: Union[dict, None], row_b: Union[dict, None], diff_col: List[str], row_index: int):
