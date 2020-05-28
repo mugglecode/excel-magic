@@ -235,6 +235,12 @@ class Sheet:
             return None
         return result
 
+    def highlight(self, rows: List[dict], highlight_style: Style):
+        for row in rows:
+            result = self.find(**row)
+            for r in result:
+                self.set_row_style(r, highlight_style)
+
     def filter(self, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
         data_list = []
 
