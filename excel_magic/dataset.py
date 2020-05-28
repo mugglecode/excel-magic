@@ -195,6 +195,15 @@ class Sheet:
     def set_header_style(self, style: Style):
         self.header_style = style
 
+    def duplicate(self, name: str, headers_only: bool = False):
+        result = Sheet(sheet=name)
+        result.fields = [*self.fields]
+        if not headers_only:
+            for row in self.data_rows:
+                r = {**row}
+                result.append_row(r)
+        return result
+
     def find(self, pairs: Union[dict, None] = None, none_if_not_found=False, **kwargs) -> Union[List[dict], None]:
         result = []
         if pairs is not None:
