@@ -43,25 +43,32 @@ class VerticalAlignment:
 
 
 class Style:
-    def __init__(self):
-        self.horizontal_alignment = 'left'
-        self.vertical_alignment = 'top'
-        self.bold = False
-        self.underline = False
-        self.font_color = 'black'
-        self.font_name = 'Calibri'
-        self.font_size = '12'
-        self.fill_color = ''
+    def __init__(self, horizontal_alignment='left',
+                 vertical_alignment='top',
+                 bold=False,
+                 underline=False,
+                 font_color='black',
+                 font_name='Calibri',
+                 font_size='12',
+                 fill_color=''):
+        self.horizontal_alignment = horizontal_alignment
+        self.vertical_alignment = vertical_alignment
+        self.bold = bold
+        self.underline = underline
+        self.font_color = font_color
+        self.font_name = font_name
+        self.font_size = font_size
+        self.fill_color = fill_color
         self.num_format = ''
 
     def attr(self):
-        attr = {'align': self.horizontal_alignment,
-                'valign': self.vertical_alignment,
-                'bold': self.bold,
-                'underline': self.underline,
+        attr = {'align'     : self.horizontal_alignment,
+                'valign'    : self.vertical_alignment,
+                'bold'      : self.bold,
+                'underline' : self.underline,
                 'font_color': self.font_color,
-                'font_name': self.font_name,
-                'font_size': self.font_size}
+                'font_name' : self.font_name,
+                'font_size' : self.font_size}
         if self.fill_color != '':
             attr['bg_color'] = self.fill_color
         if self.num_format != '':
@@ -108,7 +115,7 @@ class Cell:
         if isinstance(other, str):
             return self.value == other
         elif isinstance(other, Cell):
-            return self.value == other.value and\
+            return self.value == other.value and \
                    self.style == other.style
         else:
             if isinstance(self.value, type(other)):
@@ -417,7 +424,7 @@ class Dataset:
             with open(path, 'rb') as f:
                 zip = zipfile.ZipFile(f, compression=zipfile.ZIP_DEFLATED)
                 for i in range(self.workbook.nsheets):
-                    xml_content = zip.read(f'xl/worksheets/sheet{i+1}.xml')
+                    xml_content = zip.read(f'xl/worksheets/sheet{i + 1}.xml')
                     sheets_xml.append(xml_content)
 
             # MAGIC! DO NOT TOUCH
@@ -639,7 +646,7 @@ class Dataset:
         # open new file
         filename = os.path.join(self.path, self.filename)
         workbook = xlsxwriter.Workbook(filename, {'default_date_format':
-                                                  'yyyy/mm/dd'})
+                                                      'yyyy/mm/dd'})
         for table in self.sheets:
             sheet = workbook.add_worksheet(table.name)
             pointer = Pointer(0, 0)
@@ -654,9 +661,11 @@ class Dataset:
                             or isinstance(data.value, datetime.datetime):
 
                         if isinstance(data.value, datetime.date):
-                            sheet.write(pointer.row, pointer.col, str(data.value.isoformat()), workbook.add_format(data.attr()))
+                            sheet.write(pointer.row, pointer.col, str(data.value.isoformat()),
+                                        workbook.add_format(data.attr()))
                         elif isinstance(data.value, datetime.time):
-                            sheet.write(pointer.row, pointer.col, str(data.value.isoformat()), workbook.add_format(data.attr()))
+                            sheet.write(pointer.row, pointer.col, str(data.value.isoformat()),
+                                        workbook.add_format(data.attr()))
                         else:
                             sheet.write(pointer.row, pointer.col, str(data.value), workbook.add_format(data.attr()))
 
@@ -664,10 +673,12 @@ class Dataset:
 
                         if isinstance(data, ImageCell):
                             if isinstance(data.data, str):
-                                sheet.insert_image(pointer.row, pointer.col, data.data, {'y_offset': 10, 'x_offset': 10})
+                                sheet.insert_image(pointer.row, pointer.col, data.data,
+                                                   {'y_offset': 10, 'x_offset': 10})
                             else:
                                 data.data.seek(0)
-                                sheet.insert_image(pointer.row, pointer.col, data.value, {'image_data': data.data, 'y_offset': 10, 'x_offset': 10})
+                                sheet.insert_image(pointer.row, pointer.col, data.value,
+                                                   {'image_data': data.data, 'y_offset': 10, 'x_offset': 10})
                             img: Image.Image = Image.open(data.data)
                             width, height = img.size
                             if row_height == 0:
@@ -680,7 +691,8 @@ class Dataset:
                                 sheet.set_column(pointer.col, pointer.col, (width / 8))
 
                         elif isinstance(data, FormulaCell):
-                            sheet.write_formula(pointer.row, pointer.col, data.formula, workbook.add_format(data.attr()))
+                            sheet.write_formula(pointer.row, pointer.col, data.formula,
+                                                workbook.add_format(data.attr()))
                         else:
                             sheet.write(pointer.row, pointer.col, data.value, workbook.add_format(data.attr()))
                     pointer.next_col()
