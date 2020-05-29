@@ -208,6 +208,9 @@ class Row(MutableMapping):
         result += '}'
         return result
 
+    def __repr__(self):
+        return self.__str__()
+
     def __eq__(self, other):
         if isinstance(other, Row):
             if self.fields == other.fields:
