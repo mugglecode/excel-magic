@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 
-from excel_magic.dataset import Sheet
+from excel_magic.dataset import Sheet, Row
 
 
 class DiffSet:
@@ -23,9 +23,9 @@ class DiffSet:
 
 
 class StrictDiffRow:
-    def __init__(self, row_a: Union[dict, None], row_b: Union[dict, None], diff_col: List[str], row_index: int):
-        self.row_a: Union[dict, None] = row_a
-        self.row_b: Union[dict, None] = row_b
+    def __init__(self, row_a: Union[Row, None], row_b: Union[Row, None], diff_col: List[str], row_index: int):
+        self.row_a: Union[Row, None] = row_a
+        self.row_b: Union[Row, None] = row_b
         self.row_index = row_index
         self.diff_col: List[str] = diff_col
 

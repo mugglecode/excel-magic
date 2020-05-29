@@ -1,6 +1,7 @@
 import datetime
 import re
 import zipfile
+from collections.abc import MutableMapping
 from copy import copy
 import sqlite3
 from io import BytesIO
@@ -61,6 +62,18 @@ class Style:
         self.fill_color = fill_color
         self.num_format = ''
 
+    def __copy__(self):
+        result = Style(self.horizontal_alignment,
+                       self.vertical_alignment,
+                       self.bold,
+                       self.underline,
+                       self.font_color,
+                       self.font_name,
+                       self.font_size,
+                       self.fill_color)
+        result.num_format = self.num_format
+        return result
+
     def attr(self):
         attr = {'align'     : self.horizontal_alignment,
                 'valign'    : self.vertical_alignment,
@@ -102,6 +115,9 @@ class Cell:
     def value(self, value):
         self._value = value
 
+    def __copy__(self):
+        return Cell(self.value)
+
     def set_style(self, style: Style):
         self.style = style
 
@@ -132,17 +148,64 @@ class ImageCell(Cell):
         self.data = data
         self.value = ''
 
+    def __copy__(self):
+        return ImageCell(self.data)
+
 
 class FormulaCell(Cell):
     def __init__(self, value: Any = '', formula: str = '', style: Style = None):
         super().__init__()
         self.formula = formula
 
+    def __copy__(self):
+        return FormulaCell(formula=self.formula)
+
+
+class Row():
+    def __init__(self, fields: List[str]):
+        self.fields = fields
+        self.raw = {}
+
+    def __getitem__(self, item):
+        return self.raw[item]
+
+    def __setitem__(self, key, value):
+        if isinstance(value, Cell):
+            self.raw[key] = value
+        else:
+            self.raw[key] = Cell(value)
+
+    def __iter__(self):
+        return self.fields.__iter__()
+
+    def __delitem__(self, key):
+        del self.raw[key]
+
+    def __len__(self):
+        return len(self.raw)
+
+    def __contains__(self, item):
+        return item in self.raw
+
+    def filter_col(self, cols: List[str]):
+        row = Row([])
+        for col in self.fields:
+            if col in cols:
+                row.fields.append(col)
+        for col in row.fields:
+            row[col] = copy(self.raw[col])
+
+    def values(self):
+        return self.raw.values()
+
+    def keys(self):
+        return self.fields
+
 
 class Sheet:
     def __init__(self, suppress_warning: bool = False, sheet: Union[xlrd.sheet.Sheet, str] = ''):
         self.fields = []
-        self.data_rows: List[dict] = []
+        self.data_rows: List[Row] = []
         self.header_style: Style = Style()
         self.suppress_warning = suppress_warning
         if isinstance(sheet, str):
@@ -171,7 +234,7 @@ class Sheet:
                 flg_first_row = False
                 continue
 
-            new_row = {}
+            new_row = Row(self.fields)
             for i in range(len(self.fields)):
                 # to prevent bug when there is an empty cell
                 if i < len(row):
@@ -211,7 +274,7 @@ class Sheet:
                 result.append_row(r)
         return result
 
-    def find(self, pairs: Union[dict, None] = None, none_if_not_found=False, **kwargs) -> Union[List[dict], None]:
+    def find(self, pairs: Union[dict, None] = None, none_if_not_found=False, **kwargs) -> Union[List[Row], None]:
         result = []
         if pairs is not None:
             kwargs = pairs
@@ -242,13 +305,13 @@ class Sheet:
             return None
         return result
 
-    def highlight(self, rows: List[dict], highlight_style: Style):
+    def highlight(self, rows: List[Row], highlight_style: Style):
         for row in rows:
             result = self.find(**row)
             for r in result:
                 self.set_row_style(r, highlight_style)
 
-    def filter(self, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
+    def filter(self, callback: Callable[[Row], Union[None, bool]]) -> List[Row]:
         data_list = []
 
         for row in self.data_rows:
@@ -258,9 +321,9 @@ class Sheet:
 
         return data_list
 
-    def append_row(self, content: Union[dict, List[Union[str, Cell]]]) -> None:
-        new_row = {}
-        if isinstance(content, dict):
+    def append_row(self, content: Union[Row, dict, List[Union[str, Cell]]]) -> None:
+        new_row = Row(self.fields)
+        if isinstance(content, dict) or isinstance(content, Row):
             for field in self.fields:
                 if field in content:
                     if isinstance(content[field], Cell):
@@ -280,7 +343,7 @@ class Sheet:
                 for i in range(len(content) - 1, len(self.fields)):
                     new_row[self.fields[i]] = Cell('')
         else:
-            raise TypeError('Expected dict or list}')
+            raise TypeError('Expected Row, dict or list')
         self.data_rows.append(new_row)
 
     def append_rows(self, rows: List[Union[dict, List]]):
@@ -313,14 +376,14 @@ class Sheet:
             result += f'{k}: {row[k].value}, '
         return result
 
-    def set_row_style(self, row: Union[dict, int], style: Style) -> None:
+    def set_row_style(self, row: Union[Row, int], style: Style) -> None:
         if isinstance(row, int):
             row = self.data_rows[row]
 
         for c in row:
             row[c].style = style
 
-    def remove_row(self, row: dict) -> None:
+    def remove_row(self, row: Row) -> None:
         self.data_rows.remove(row)
 
     def import_json(self, path: str) -> None:
@@ -374,7 +437,7 @@ class Sheet:
             result.append(min)
         return result
 
-    def beautify(self, by: str) -> List[dict]:
+    def beautify(self, by: str) -> List[Row]:
         if isinstance(by, str):
             grouped = []
             ungrouped = copy(self.data_rows)
@@ -500,15 +563,15 @@ class Dataset:
             file.sheets.append(sh)
         return file
 
-    def filter(self, table: Sheet, callback: Callable[[dict], Union[None, bool]]) -> List[dict]:
+    def filter(self, table: Sheet, callback: Callable[[Row], Union[None, bool]]) -> List[Row]:
         return table.filter(callback)
 
-    def find(self, sheet: Sheet, **kwargs) -> List[dict]:
+    def find(self, sheet: Sheet, **kwargs) -> List[Row]:
         result = sheet.find(**kwargs)
 
         return result
 
-    def append_row(self, sheet: Union[Sheet, str], content: dict) -> None:
+    def append_row(self, sheet: Union[Sheet, str], content: Row) -> None:
         if isinstance(sheet, str):
             sheet = self.get_sheet_by_name(sheet)
         if sheet is None:
