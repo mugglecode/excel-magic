@@ -193,7 +193,7 @@ class Row(MutableMapping):
             result[i] = copy(self.raw[i])
         return result
 
-    def filter_col(self, cols: List[str]):
+    def filter_fields(self, cols: List[str]):
         row = Row([])
         for col in self.fields:
             if col in cols:
@@ -227,7 +227,7 @@ class Row(MutableMapping):
         else:
             return False
 
-    def intersect(self, b: 'Row'):
+    def _intersect(self, b: 'Row'):
         result = Row([])
 
         for i in self.raw:
@@ -236,7 +236,7 @@ class Row(MutableMapping):
                 result[i] = self[i]
         return result
 
-    def union(self, b: 'Row'):
+    def _union(self, b: 'Row'):
         result = Row([])
         for i in self.raw:
             result[i] = copy(self.raw[i])
