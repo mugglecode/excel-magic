@@ -401,7 +401,7 @@ class Sheet:
         for row in rows:
             self.append_row(row)
 
-    def get_rows(self) -> List[dict]:
+    def get_rows(self) -> List[Row]:
         r = [*self.data_rows]
         return r
 
