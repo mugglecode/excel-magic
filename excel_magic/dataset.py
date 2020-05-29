@@ -639,7 +639,7 @@ class Dataset:
 
     def save(self, *, backup=True, row_height=0, col_width=0):
         # make backup & delete
-        if os.path.isfile(os.path.join(self.path, self.filename)) and backup:
+        if os.path.exists(os.path.join(self.path, self.filename)) and backup:
             shutil.copy(os.path.join(self.path, self.filename), os.path.join(self.path, self.backup_name))
             os.remove(os.path.join(self.path, self.filename))
 
