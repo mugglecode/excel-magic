@@ -514,7 +514,7 @@ class Sheet:
 class Dataset:
 
     def __init__(self, path: str, catch_formulas=False, suppress_warning=False):
-        if not os.path.isfile(path):
+        if not os.path.exists(path):
             wb = xlsxwriter.Workbook(path)
             wb.close()
         self.workbook = xlrd.open_workbook(path, on_demand=True)
