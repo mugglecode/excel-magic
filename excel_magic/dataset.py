@@ -200,6 +200,7 @@ class Row(MutableMapping):
                 row.fields.append(col)
         for col in row.fields:
             row[col] = copy(self.raw[col])
+        return row
 
     def __str__(self):
         result = '{'
