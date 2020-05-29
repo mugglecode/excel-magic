@@ -6,7 +6,7 @@ from copy import copy
 import sqlite3
 from io import BytesIO
 import xlrd
-from typing import Callable, Union, List, Any, Tuple
+from typing import Callable, Union, List, Any, Tuple, Dict
 import os
 import shutil
 import xlsxwriter
@@ -161,10 +161,10 @@ class FormulaCell(Cell):
         return FormulaCell(formula=self.formula)
 
 
-class Row():
+class Row(MutableMapping):
     def __init__(self, fields: List[str]):
         self.fields = fields
-        self.raw = {}
+        self.raw: Dict[Cell] = {}
 
     def __getitem__(self, item):
         return self.raw[item]
@@ -187,6 +187,12 @@ class Row():
     def __contains__(self, item):
         return item in self.raw
 
+    def __copy__(self):
+        result = Row(self.fields)
+        for i in self.raw:
+            result[i] = copy(self.raw[i])
+        return result
+
     def filter_col(self, cols: List[str]):
         row = Row([])
         for col in self.fields:
@@ -194,6 +200,48 @@ class Row():
                 row.fields.append(col)
         for col in row.fields:
             row[col] = copy(self.raw[col])
+
+    def __str__(self):
+        result = '{'
+        for i in self.raw:
+            result += f'"{i}": {self.raw[i].value}; '
+        result += '}'
+        return result
+
+    def __eq__(self, other):
+        if isinstance(other, Row):
+            if self.fields == other.fields:
+                for i in self.fields:
+                    if not ((i in self.raw and i in other.raw) or (i not in self.raw and i not in other.raw)):
+                        return False
+                    else:
+                        if self.raw[i].value != other.raw[i].value:
+                            return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            return False
+
+    def intersect(self, b: 'Row'):
+        result = Row([])
+
+        for i in self.raw:
+            if i in b.raw:
+                result.fields.append(i)
+                result[i] = self[i]
+        return result
+
+    def union(self, b: 'Row'):
+        result = Row([])
+        for i in self.raw:
+            result[i] = copy(self.raw[i])
+        for i in b.raw:
+            if i not in result.raw:
+                result[i] = copy(b.raw[i])
+
+        return result
 
     def values(self):
         return self.raw.values()
