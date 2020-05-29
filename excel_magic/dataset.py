@@ -193,7 +193,7 @@ class Row(MutableMapping):
             result[i] = copy(self.raw[i])
         return result
 
-    def filter_fields(self, cols: List[str]):
+    def filter_fields(self, cols: List[str]) -> 'Row':
         row = Row([])
         for col in self.fields:
             if col in cols:
