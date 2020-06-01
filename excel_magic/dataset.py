@@ -786,15 +786,16 @@ class Dataset:
         filename = os.path.join(self.path, self.filename)
         workbook = xlsxwriter.Workbook(filename, {'default_date_format':
                                                       'yyyy/mm/dd'})
-        for table in self.sheets:
-            sheet = workbook.add_worksheet(table.name)
+        for sheet in self.sheets:
+            sheet = workbook.add_worksheet(sheet.name)
             pointer = Pointer(0, 0)
-            for field in table.fields:
-                sheet.write(pointer.row, pointer.col, field, workbook.add_format(table.header_style.attr()))
+            for field in sheet.fields:
+                sheet.write(pointer.row, pointer.col, field, workbook.add_format(sheet.header_style.attr()))
                 pointer.next_col()
             pointer.next_row()
-            for data_row in table.data_rows:
-                for data in data_row.values():
+            for data_row in sheet.data_rows:
+                for col in sheet.fields:
+                    data = data_row[col]
                     if isinstance(data.value, datetime.date) \
                             or isinstance(data.value, datetime.time) \
                             or isinstance(data.value, datetime.datetime):
