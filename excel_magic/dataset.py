@@ -247,6 +247,30 @@ class Row(MutableMapping):
 
         return result
 
+    def __add__(self, other: Union['Row', Dict[str, str]]) -> 'Row':
+        result = Row([])
+
+        for col in self:
+            result.fields.append(col)
+            result[col] = copy(self[col])
+
+        for col in other:
+            if col in self and self[col] != other[col]:
+                raise ValueError('Unable to add two row having the same header but different values')
+            result.fields.append(col)
+            result[col] = copy(other[col])
+
+        return result
+
+    def __sub__(self, other: Union['Row', Dict[str, str]]) -> 'Row':
+        result = Row([])
+
+        for col in self:
+            if col not in other:
+                result[col] = copy(self[col])
+
+        return result
+
     def values(self):
         return self.raw.values()
 
