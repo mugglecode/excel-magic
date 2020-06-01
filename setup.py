@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
         name='excelmagic',
-        version='1.3.4',
+        version='1.3.5',
         packages=setuptools.find_packages(),
         url='https://github.com/guo40020/excel-magic',
         license='MIT',
