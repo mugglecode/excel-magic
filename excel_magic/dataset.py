@@ -255,7 +255,7 @@ class Row(MutableMapping):
             result[col] = copy(self[col])
 
         for col in other:
-            if col in self and self[col] != other[col]:
+            if col in self and self[col].value != (other[col].value if isinstance(other, Row) else other[col]):
                 raise ValueError('Unable to add two row having the same header but different values')
             result.fields.append(col)
             result[col] = copy(other[col])
