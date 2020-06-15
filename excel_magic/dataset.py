@@ -329,10 +329,14 @@ class Sheet:
                         new_row[self.fields[i]] = c
                     else:
                         if isinstance(row[i].value, str):
-                            if row[i].value.isascii() and row[i].value.isnumeric():
+                            try:
+                                if row[i].value.isascii() and row[i].value.isnumeric():
+                                    if not self.suppress_warning:
+                                        print('Warning: Found a number stored in string format, converting...')
+                                    new_row[self.fields[i]] = Cell(float(row[i].value))
+                            except AttributeError:
                                 if not self.suppress_warning:
-                                    print('Warning: Found a number stored in string format, converting...')
-                                new_row[self.fields[i]] = Cell(float(row[i].value))
+                                    print('Warning: python3.6 compatibility mode')
                         new_row[self.fields[i]] = Cell(row[i].value)
                 else:
                     new_row[self.fields[i]] = ''
@@ -422,7 +426,7 @@ class Sheet:
             raise TypeError('Expected Row, dict or list')
         self.data_rows.append(new_row)
 
-    def append_rows(self, rows: List[Union[dict, List]]):
+    def append_rows(self, rows: List[Union[dict, Row, List]]):
         for row in rows:
             self.append_row(row)
 
@@ -498,8 +502,8 @@ class Sheet:
         filenames = {}
 
     def sort_by(self, by: str, desc=False):
-        copied = [*self.data_rows]
-        result = []
+        copied: List[Row] = [*self.data_rows]
+        result: List[Row] = []
         for i in range(len(self.data_rows)):
             min = copied[0]
             for j in range(len(copied)):
@@ -511,7 +515,7 @@ class Sheet:
                         min = copied[j]
             copied.remove(min)
             result.append(min)
-        return result
+        self.data_rows = result
 
     def beautify(self, by: str) -> List[Row]:
         if isinstance(by, str):
