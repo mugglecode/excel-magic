@@ -1,2 +1,7 @@
 xlrd>=1.2.0
 XlsxWriter>=1.2.8
+
+qrcode>=6.1
+setuptools>=41.2.0
+openpyxl>=3.0.3
+Pillow>=7.1.1

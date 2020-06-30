@@ -1,11 +1,8 @@
 import datetime
-import re
-import zipfile
 from collections.abc import MutableMapping
 from copy import copy
 import sqlite3
 from io import BytesIO
-import xlrd
 from typing import Callable, Union, List, Any, Tuple, Dict
 import os
 import shutil
@@ -13,6 +10,9 @@ import xlsxwriter
 import csv
 import json
 from PIL import Image
+from openpyxl import load_workbook
+from openpyxl.workbook.workbook import ReadOnlyWorksheet
+import openpyxl.cell
 
 __all__ = ['Sheet', 'Dataset', 'open_file']
 
@@ -279,7 +279,7 @@ class Row(MutableMapping):
 
 
 class Sheet:
-    def __init__(self, suppress_warning: bool = False, sheet: Union[xlrd.sheet.Sheet, str] = ''):
+    def __init__(self, suppress_warning: bool = False, sheet: Union[ReadOnlyWorksheet, str] = ''):
         self.fields = []
         self.data_rows: List[Row] = []
         self.header_style: Style = Style()
@@ -287,7 +287,7 @@ class Sheet:
         if isinstance(sheet, str):
             self.name: str = sheet
         else:
-            self.name: str = sheet.name
+            self.name: str = sheet.title
             self._init_fields(sheet)
             self._init_data(sheet)
 
@@ -297,14 +297,15 @@ class Sheet:
     def sheet_length(self):
         return self.__len__()
 
-    def _init_fields(self, sheet: xlrd.sheet.Sheet):
-        fields_row = sheet.row(0)
+    def _init_fields(self, sheet: ReadOnlyWorksheet):
+        fields_row = sheet.rows.__next__()
         for field in fields_row:
             self.fields.append(field.value)
 
-    def _init_data(self, sheet: xlrd.sheet.Sheet):
+    def _init_data(self, sheet: ReadOnlyWorksheet):
         flg_first_row = True
-        for row in sheet.get_rows():
+        row: Tuple[openpyxl.cell.Cell]
+        for row in sheet.rows:
             # skip the first row
             if flg_first_row:
                 flg_first_row = False
@@ -314,18 +315,15 @@ class Sheet:
             for i in range(len(self.fields)):
                 # to prevent bug when there is an empty cell
                 if i < len(row):
-                    if row[i].ctype == 3:
-                        dt = [*xlrd.xldate_as_tuple(row[i].value, sheet.book.datemode)]
-                        try:
-                            if dt[0] == 0 or dt[1] == 0 or dt[2] == 0:
-                                c = Cell(datetime.time(dt[3], dt[4], dt[5]))
-                            elif dt[3] == 0 and dt[4] == 0 and dt[5] == 0:
-                                c = Cell(datetime.date(dt[0], dt[1], dt[2]))
+                    if isinstance(row[i].value, datetime.datetime):
+                        value: datetime.datetime = row[i].value
+                        if isinstance(row[i].value, datetime.time):
+                            c = Cell(value)
+                        else:
+                            if value.hour == 0 and value.minute == 0 and value.second == 0:
+                                c = Cell(value.date())
                             else:
-                                c = Cell(datetime.datetime(*dt))
-                        except:
-                            c = Cell(datetime.datetime(*dt))
-                        c.style.num_format = 'yyyy/mm/dd'
+                                c = Cell(value)
                         new_row[self.fields[i]] = c
                     else:
                         if isinstance(row[i].value, str):
@@ -498,8 +496,8 @@ class Sheet:
         with open(out, 'w') as f:
             json.dump(data, f)
 
-    def split_rows(path: str, row_count: int, name_by: str):
-        filenames = {}
+    # def split_rows(path: str, row_count: int, name_by: str):
+    #     filenames = {}
 
     def sort_by(self, by: str, desc=False):
         copied: List[Row] = [*self.data_rows]
@@ -541,60 +539,19 @@ class Sheet:
 
 class Dataset:
 
-    def __init__(self, path: str, catch_formulas=False, suppress_warning=False):
-        if not os.path.exists(path):
-            wb = xlsxwriter.Workbook(path)
-            wb.close()
-        self.workbook = xlrd.open_workbook(path, on_demand=True)
+    def __init__(self, path: str, suppress_warning=False):
+        self.workbook = load_workbook(path, read_only=True)
         self.sheets = []
         self.filename = os.path.basename(path)
         self.backup_name = self.filename + '.bak'
         self.path = os.path.dirname(path)
         self.suppress_warning = suppress_warning
-        sheet: xlrd.sheet.Sheet
-        for sheet in self.workbook.sheets():
-            try:
-                sheet.row(0)
-            except IndexError:
-                continue
+        sheet: ReadOnlyWorksheet
+        for sheet in self.workbook.worksheets:
+            if sheet.max_row == 0:
+                continue  # TODO: Raise Exception
             self.sheets.append(Sheet(self.suppress_warning, sheet))
-            self.workbook.unload_sheet(sheet.name)
-        self.workbook.release_resources()
-
-        # Catch Formula
-        if catch_formulas and len(self.sheets) != 0:
-            sheets_xml = []
-            with open(path, 'rb') as f:
-                zip = zipfile.ZipFile(f, compression=zipfile.ZIP_DEFLATED)
-                for i in range(self.workbook.nsheets):
-                    xml_content = zip.read(f'xl/worksheets/sheet{i + 1}.xml')
-                    sheets_xml.append(xml_content)
-
-            # MAGIC! DO NOT TOUCH
-            cell_pattern = re.compile(r'<c [A-z\": =0-9]*>[<>A-z0-9/.+\-*\u4e00-\u9fa5!:@#$%^&\[\]{}?\';\"(),]*</c>')
-            cell_notation_pattern = re.compile(r'r=\"([A-Z0-9]*)\"')
-            function_pattern = re.compile(r'(?<=<f>)([\s\S]*)(?=</f>)')
-            sheet_counter = 0
-            for xml in sheets_xml:
-                loaded_sheet = self.sheets[sheet_counter]
-                xml = xml.decode()
-
-                cells = cell_pattern.findall(xml)
-                formula_cells = []
-                for c in cells:
-                    if '<f>' in c:
-                        formula_cells.append(c)
-                cells.clear()
-
-                for c in formula_cells:
-                    pos = self._resolve_cell_notation(cell_notation_pattern.search(c).group(1))
-                    formula = function_pattern.search(c).group(1)
-
-                    row = loaded_sheet.data_rows[pos[0] - 1]
-                    cell_value = row[loaded_sheet.fields[pos[1]]].value
-                    row[loaded_sheet.fields[pos[1]]] = FormulaCell(formula=formula, value=cell_value)
-
-                sheet_counter += 1
+        self.workbook.close()
 
     def _resolve_cell_notation(self, s: str) -> Tuple[int, int]:
         """
@@ -728,13 +685,13 @@ class Dataset:
         conn.close()
 
     def merge_file(self, path: str, force: bool = False) -> None:
-        workbook = xlrd.open_workbook(path)
-        sheet: xlrd.sheet.Sheet
-        for sheet in workbook.sheets():
-            tbl = self.get_sheet_by_name(sheet.name)
+        workbook = load_workbook(path, read_only=True)
+        sheet: ReadOnlyWorksheet
+        for sheet in workbook.worksheets:
+            tbl = self.get_sheet_by_name(sheet.title)
             if tbl is not None:
                 if force:
-                    headers_to_merge = sheet.row(0)
+                    headers_to_merge = sheet.rows.__next__()
                     for i in range(len(headers_to_merge)):
                         headers_to_merge[i] = headers_to_merge[i].value
                     for h in headers_to_merge:
@@ -743,9 +700,9 @@ class Dataset:
                     tbl.fields.extend(headers_to_merge)
                 self._merge_table(sheet, tbl)
             else:
-                tbl = Sheet(self.suppress_warning, sheet.name)
+                tbl = Sheet(self.suppress_warning, sheet.title)
                 try:
-                    headers = sheet.row(0)
+                    headers = sheet.rows.__next__()
                 except IndexError:
                     raise ValueError('File has no headers')
                 for h in headers:
@@ -753,9 +710,9 @@ class Dataset:
                 self._merge_table(sheet, tbl)
                 self.sheets.append(tbl)
 
-    def _merge_table(self, sheet, tbl):
+    def _merge_table(self, sheet: ReadOnlyWorksheet, new_sheet):
         flg_first_row = True
-        for row in sheet.get_rows():
+        for row in sheet.rows:
             # Skip header
             if flg_first_row:
                 flg_first_row = False
@@ -764,7 +721,7 @@ class Dataset:
             new_row = []
             for cell in row:
                 new_row.append(cell.value)
-            tbl.append_row(new_row)
+            new_sheet.append_row(new_row)
 
     def split_sheets_to_file(self):
         for s in self.sheets:
@@ -851,4 +808,4 @@ class Dataset:
 
 
 def open_file(path: str, catch_formulas=False, suppress_warning=False) -> Dataset:
-    return Dataset(path, catch_formulas=catch_formulas, suppress_warning=suppress_warning)
+    return Dataset(path, suppress_warning=suppress_warning)
