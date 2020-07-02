@@ -307,7 +307,7 @@ class Sheet:
         self.header_style: Style = Style()
         self.suppress_warning = suppress_warning
         self.header_starts = -1
-        self.file_head = []
+        self.file_head: List[List[Cell]] = []
         self.raw_sheet = sheet
         if isinstance(sheet, str):
             self.name: str = sheet
@@ -893,7 +893,25 @@ class Dataset:
                                                       'yyyy/mm/dd'})
         for table in self.sheets:
             sheet: xlsxwriter.workbook.Worksheet = workbook.add_worksheet(table.name)
-            pointer = Pointer(0, 0)
+            merged = []
+            pointer = Pointer(table.header_starts, 0)
+            # write useless file head
+            for i in range(table.header_starts):
+                for cell in table.file_head[i]:
+                    if isinstance(cell, MergedCell):
+                        if cell in merged:
+                            continue
+                        sheet.merge_range(cell.start_row,
+                                          cell.start_col,
+                                          cell.end_row,
+                                          cell.end_col if cell.end_col != -1 else table.fields.__len__() - 1,
+                                          data=cell.value,
+                                          cell_format=workbook.add_format(Style('center', 'center').attr()))
+                        merged.append(cell)
+                    else:
+                        sheet.write(cell.value)
+
+            # write headers
             for field in table.fields:
                 sheet.write(pointer.row, pointer.col, field, workbook.add_format(table.header_style.attr()))
                 pointer.next_col()
