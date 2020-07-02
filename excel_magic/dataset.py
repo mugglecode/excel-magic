@@ -11,10 +11,12 @@ import csv
 import json
 from PIL import Image
 from openpyxl import load_workbook
-from openpyxl.workbook.workbook import ReadOnlyWorksheet
+from openpyxl.workbook.workbook import Worksheet
 import openpyxl.cell
 
-__all__ = ['Sheet', 'Dataset', 'open_file']
+__all__ = ['Dataset', 'open_file']
+
+from Exceptions import EmptySheetException, PredictionException
 
 
 class Pointer:
@@ -161,6 +163,26 @@ class FormulaCell(Cell):
         return FormulaCell(formula=self.formula)
 
 
+class MergedCell(Cell):
+    def __init__(self, start_pos: Tuple[int, int] = None, end_pos: Tuple[int, int] = None, value: Any = '', style: Style = None):
+        """
+        represents a merged cell
+        :param start_pos: Tuple[row, col]
+        :param end_pos: Tuple[row, col]
+        :param value:
+        :param style:
+        """
+        super().__init__(value, style)
+        self.start_row, self.start_col = start_pos if start_pos is not None else (-1,-1)
+        self.end_row, self.end_col = end_pos if end_pos is not None else (-1,-1)
+
+    def add_col(self):
+        self.end_col += 1
+
+    def add_row(self):
+        self.end_row += 1
+
+
 class Row(MutableMapping):
     def __init__(self, fields: List[str]):
         self.fields = fields
@@ -279,15 +301,19 @@ class Row(MutableMapping):
 
 
 class Sheet:
-    def __init__(self, suppress_warning: bool = False, sheet: Union[ReadOnlyWorksheet, str] = ''):
+    def __init__(self, suppress_warning: bool = False, sheet: Union[Worksheet, str] = ''):
         self.fields = []
         self.data_rows: List[Row] = []
         self.header_style: Style = Style()
         self.suppress_warning = suppress_warning
+        self.header_starts = -1
+        self.file_head = []
+        self.raw_sheet = sheet
         if isinstance(sheet, str):
             self.name: str = sheet
         else:
             self.name: str = sheet.title
+            self._predict_header_pos(sheet)
             self._init_fields(sheet)
             self._init_data(sheet)
 
@@ -297,18 +323,131 @@ class Sheet:
     def sheet_length(self):
         return self.__len__()
 
-    def _init_fields(self, sheet: ReadOnlyWorksheet):
-        fields_row = sheet.rows.__next__()
+    def _predict_header_pos(self, sheet: Worksheet):
+        same_cell_count_run = 0
+        last_cell_count = 0
+        row_counter = 0
+        possible_header = None
+        header_starts = -1
+        head_rows = []
+        for row in sheet.rows:
+            current_merged_cell = None
+            head_row = []
+            col_counter = 0
+            has_merged = False
+            for cell in row:
+                # if it is a normal cell
+                if isinstance(cell, openpyxl.cell.Cell):
+                    # look forward
+                    # if it is not the last cell
+                    if col_counter != row.__len__() -1:
+                        if isinstance(row[col_counter + 1], openpyxl.cell.MergedCell):
+                            # look right
+                            # If the next cell is a merged cell, this is the starting point of a merged cell(horizontal)
+                            current_merged_cell = MergedCell((row_counter, col_counter), value=cell.value)
+                            head_row.append(current_merged_cell)
+                            has_merged = True
+
+                        elif isinstance(sheet.cell(row_counter + 2, col_counter + 1), openpyxl.cell.MergedCell):
+                            # look down
+                            # if it is a merged cell, this is a merged cell(vertical)
+                            current_merged_cell = MergedCell((row_counter, col_counter),
+                                                             value=sheet.cell(row_counter + 1, col_counter + 1).value)
+                            head_row.append(current_merged_cell)
+                            has_merged = True
+
+                        else:
+                            # if there is a merged cell this row, it ends at the lefter col
+                            if current_merged_cell is not None:
+                                current_merged_cell.end_col = col_counter - 1
+                            # look up, if there is a merged cell, it ends at the upper row
+                            if len(head_rows) != 0:
+                                if isinstance(head_rows[row_counter - 1][col_counter], MergedCell):
+                                    head_rows[row_counter - 1][col_counter].end_row = row_counter - 1
+                                head_row.append(Cell(cell.value))
+                    else:
+                        if current_merged_cell is not None:
+                            current_merged_cell.end_col = col_counter - 1
+                        # look up, if there is a merged cell, it ends at the upper row
+                        if len(head_rows) != 0:
+                            if isinstance(head_rows[row_counter - 1][col_counter], MergedCell):
+                                head_rows[row_counter - 1][col_counter].end_row = row_counter - 1
+                            head_row.append(Cell(cell.value))
+
+                # if it is a merged cell
+                elif isinstance(cell, openpyxl.cell.MergedCell):
+                    has_merged = True
+                    # find the correct merged cell
+                    # look forward if it is not the first cell of this row
+                    if col_counter != 0:
+                        # if the lefter one is a merged cell and it has not ended yet
+                        if isinstance(head_row[col_counter - 1], MergedCell) and head_row[col_counter - 1].end_col == -1:
+                            # it belongs to the lefter merged cell
+                            head_row.append(head_row[col_counter - 1])
+                            continue
+                    # look up if it is not the first row
+                    if row_counter != 0:
+                        # if it is a merged cell and it has not ended yet
+                        if isinstance(head_rows[row_counter - 1][col_counter], MergedCell) and\
+                                head_rows[row_counter - 1][col_counter].end_col == -1:
+                            # it belongs to the upper merged cell
+                            head_row.append(head_rows[row_counter - 1][col_counter])
+                        else:
+                            raise PredictionException('Unable to find the corresponding starting merged cell')
+                    else:
+                        raise PredictionException('Unable to find the corresponding starting merged cell')
+
+                col_counter += 1
+
+            head_rows.append(head_row)
+            if not has_merged:
+                # may be header
+                if last_cell_count == head_row.__len__():
+                    same_cell_count_run += 1
+                last_cell_count = head_row.__len__()
+                if possible_header is None:
+                    possible_header = head_row
+                    header_starts = row_counter
+            else:
+                last_cell_count = 0
+                possible_header = None
+                header_starts = -1
+
+            # if there are more than 2
+            if same_cell_count_run > 2:
+                self.header_starts = header_starts
+                self.file_head = head_rows
+                break
+
+            row_counter += 1
+        else:
+            if same_cell_count_run > 0:
+                # assume it is header
+                self.header_starts = header_starts
+                self.file_head = head_rows
+            else:
+                raise PredictionException('Unable to find header')
+
+    def _init_fields(self, sheet: Worksheet):
+        counter = 0
+        fields_row = None
+        for row in sheet.rows:
+            # skip headers
+            if counter < self.header_starts:
+                counter += 1
+                continue
+            fields_row = row
+            break
         for field in fields_row:
             self.fields.append(field.value)
 
-    def _init_data(self, sheet: ReadOnlyWorksheet):
-        flg_first_row = True
+    def _init_data(self, sheet: Worksheet):
         row: Tuple[openpyxl.cell.Cell]
+        counter = 0
         for row in sheet.rows:
-            # skip the first row
-            if flg_first_row:
-                flg_first_row = False
+            # skip headers
+            if counter < self.header_starts + 1:
+                counter += 1
                 continue
 
             new_row = Row(self.fields)
@@ -339,6 +478,11 @@ class Sheet:
                 else:
                     new_row[self.fields[i]] = ''
             self.data_rows.append(new_row)
+        for cell in self.data_rows[-1].values():
+            if cell.value is not None:
+                break
+        else:
+            self.data_rows.pop(-1)
 
     def set_header_style(self, style: Style):
         self.header_style = style
@@ -540,18 +684,18 @@ class Sheet:
 class Dataset:
 
     def __init__(self, path: str, suppress_warning=False):
-        self.workbook = load_workbook(path, read_only=True)
+        self.workbook = load_workbook(path)
         self.sheets = []
         self.filename = os.path.basename(path)
         self.backup_name = self.filename + '.bak'
         self.path = os.path.dirname(path)
         self.suppress_warning = suppress_warning
-        sheet: ReadOnlyWorksheet
+        sheet: Worksheet
         for sheet in self.workbook.worksheets:
             if sheet.max_row == 0:
-                continue  # TODO: Raise Exception
+                raise EmptySheetException
             self.sheets.append(Sheet(self.suppress_warning, sheet))
-        self.workbook.close()
+        # self.workbook.close()
 
     def _resolve_cell_notation(self, s: str) -> Tuple[int, int]:
         """
@@ -686,7 +830,7 @@ class Dataset:
 
     def merge_file(self, path: str, force: bool = False) -> None:
         workbook = load_workbook(path, read_only=True)
-        sheet: ReadOnlyWorksheet
+        sheet: Worksheet
         for sheet in workbook.worksheets:
             tbl = self.get_sheet_by_name(sheet.title)
             if tbl is not None:
@@ -710,7 +854,7 @@ class Dataset:
                 self._merge_table(sheet, tbl)
                 self.sheets.append(tbl)
 
-    def _merge_table(self, sheet: ReadOnlyWorksheet, new_sheet):
+    def _merge_table(self, sheet: Worksheet, new_sheet):
         flg_first_row = True
         for row in sheet.rows:
             # Skip header
@@ -807,5 +951,5 @@ class Dataset:
         return self
 
 
-def open_file(path: str, catch_formulas=False, suppress_warning=False) -> Dataset:
+def open_file(path: str, suppress_warning=False) -> Dataset:
     return Dataset(path, suppress_warning=suppress_warning)
