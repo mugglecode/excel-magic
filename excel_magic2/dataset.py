@@ -683,16 +683,22 @@ class Sheet:
 class Dataset:
 
     def __init__(self, path: str, suppress_warning=False):
-        self.workbook = load_workbook(path)
+
         self.sheets = []
         self.filename = os.path.basename(path)
         self.backup_name = self.filename + '.bak'
         self.path = os.path.dirname(path)
         self.suppress_warning = suppress_warning
+
+        if not os.path.exists(path):
+            wb = xlsxwriter.Workbook(path)
+            wb.close()
+        self.workbook = load_workbook(path)
+
         sheet: Worksheet
         for sheet in self.workbook.worksheets:
             if sheet.max_row == 0:
-                raise EmptySheetException
+                raise EmptySheetExceptions
             self.sheets.append(Sheet(self.suppress_warning, sheet))
         # self.workbook.close()
 
