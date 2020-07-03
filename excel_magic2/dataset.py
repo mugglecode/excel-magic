@@ -305,7 +305,7 @@ class Sheet:
         self.data_rows: List[Row] = []
         self.header_style: Style = Style()
         self.suppress_warning = suppress_warning
-        self.header_starts = -1
+        self.header_starts = 0
         self.file_head: List[List[Cell]] = []
         self.raw_sheet = sheet
         if isinstance(sheet, str):
@@ -698,7 +698,7 @@ class Dataset:
         sheet: Worksheet
         for sheet in self.workbook.worksheets:
             if sheet.max_row == 0:
-                raise EmptySheetExceptions
+                raise EmptySheetException
             self.sheets.append(Sheet(self.suppress_warning, sheet))
         # self.workbook.close()
 
