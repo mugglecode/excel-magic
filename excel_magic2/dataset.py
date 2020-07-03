@@ -3,7 +3,7 @@ from collections.abc import MutableMapping
 from copy import copy
 import sqlite3
 from io import BytesIO
-from typing import Callable, Union, List, Any, Tuple, Dict
+from typing import Callable, Union, List, Any, Tuple, Dict, Iterable
 import os
 import shutil
 import xlsxwriter
@@ -187,10 +187,10 @@ class Row(MutableMapping):
         self.fields = fields
         self.raw: Dict[Cell] = {}
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> Cell:
         return self.raw[item]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Union[Cell, Any]):
         if isinstance(value, Cell):
             self.raw[key] = value
         else:
@@ -476,7 +476,13 @@ class Sheet:
                         new_row[self.fields[i]] = Cell(row[i].value)
                 else:
                     new_row[self.fields[i]] = ''
-            self.data_rows.append(new_row)
+            # if it is almost the end of file, check row
+            if counter + 10 >= sheet.max_row:
+                for i in new_row:
+                    if i.value is not None:
+                        self.data_rows.append(new_row)
+
+            counter += 1
         for cell in self.data_rows[-1].values():
             if cell.value is not None:
                 break
@@ -697,10 +703,17 @@ class Dataset:
 
         sheet: Worksheet
         for sheet in self.workbook.worksheets:
-            if sheet.max_row == 1:
+            if sheet.max_row == 1 and self._is_all_none(sheet.rows.__next__()):
                 continue
             self.sheets.append(Sheet(self.suppress_warning, sheet))
         # self.workbook.close()
+
+    def _is_all_none(self, row: Tuple[openpyxl.cell.Cell]):
+        for i in row:
+            if i.value is not None:
+                return False
+        else:
+            return True
 
     def _resolve_cell_notation(self, s: str) -> Tuple[int, int]:
         """
