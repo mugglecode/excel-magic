@@ -4,3 +4,7 @@ class EmptySheetException(Exception):
 
 class PredictionException(Exception):
     pass
+
+
+class DifferentFieldsException(Exception):
+    pass

@@ -3,7 +3,7 @@ from collections.abc import MutableMapping
 from copy import copy
 import sqlite3
 from io import BytesIO
-from typing import Callable, Union, List, Any, Tuple, Dict, Iterable
+from typing import Callable, Union, List, Any, Tuple, Dict
 import os
 import shutil
 import xlsxwriter
@@ -13,7 +13,7 @@ from PIL import Image
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Worksheet
 import openpyxl.cell
-from excel_magic2.Exceptions import EmptySheetException, PredictionException
+from excel_magic2.Exceptions import PredictionException, DifferentFieldsException
 
 __all__ = ['Dataset', 'open_file']
 
@@ -155,7 +155,7 @@ class ImageCell(Cell):
 
 class FormulaCell(Cell):
     def __init__(self, value: Any = '', formula: str = '', style: Style = None):
-        super().__init__()
+        super().__init__(value=value, style=style)
         self.formula = formula
 
     def __copy__(self):
@@ -172,8 +172,8 @@ class MergedCell(Cell):
         :param style:
         """
         super().__init__(value, style)
-        self.start_row, self.start_col = start_pos if start_pos is not None else (-1,-1)
-        self.end_row, self.end_col = end_pos if end_pos is not None else (-1,-1)
+        self.start_row, self.start_col = start_pos if start_pos is not None else (-1, -1)
+        self.end_row, self.end_col = end_pos if end_pos is not None else (-1, -1)
 
     def add_col(self):
         self.end_col += 1
@@ -185,7 +185,7 @@ class MergedCell(Cell):
 class Row(MutableMapping):
     def __init__(self, fields: List[str]):
         self.fields = fields
-        self.raw: Dict[Cell] = {}
+        self.raw: Dict[str, Cell] = {}
 
     def __getitem__(self, item) -> Cell:
         return self.raw[item]
@@ -248,25 +248,6 @@ class Row(MutableMapping):
                 return False
         else:
             return False
-
-    def _intersect(self, b: 'Row'):
-        result = Row([])
-
-        for i in self.raw:
-            if i in b.raw:
-                result.fields.append(i)
-                result[i] = self[i]
-        return result
-
-    def _union(self, b: 'Row'):
-        result = Row([])
-        for i in self.raw:
-            result[i] = copy(self.raw[i])
-        for i in b.raw:
-            if i not in result.raw:
-                result[i] = copy(b.raw[i])
-
-        return result
 
     def __add__(self, other: Union['Row', Dict[str, str]]) -> 'Row':
         result = Row([])
@@ -339,7 +320,7 @@ class Sheet:
                 if isinstance(cell, openpyxl.cell.Cell):
                     # look forward
                     # if it is not the last cell
-                    if col_counter != row.__len__() -1:
+                    if col_counter != row.__len__() - 1:
                         if isinstance(row[col_counter + 1], openpyxl.cell.MergedCell):
                             # look right
                             # If the next cell is a merged cell, this is the starting point of a merged cell(horizontal)
@@ -478,16 +459,12 @@ class Sheet:
                     new_row[self.fields[i]] = ''
             # if it is almost the end of file, check row
             if counter + 10 >= sheet.max_row:
-                for i in new_row:
+                for i in new_row.values():
                     if i.value is not None:
                         self.data_rows.append(new_row)
+                        break
 
             counter += 1
-        for cell in self.data_rows[-1].values():
-            if cell.value is not None:
-                break
-        else:
-            self.data_rows.pop(-1)
 
     def set_header_style(self, style: Style):
         self.header_style = style
@@ -500,6 +477,18 @@ class Sheet:
                 r = {**row}
                 result.append_row(r)
         return result
+
+    def merge_sheet(self, new: 'Sheet', force: bool=False):
+        if force:
+            if new.fields != self.fields:
+                for f in new.fields:
+                    if f not in self.fields:
+                        self.fields.append(f)
+        else:
+            if new.fields != self.fields:
+                raise DifferentFieldsException('Unable to merge, try force mode')
+        for row in new.data_rows:
+            self.data_rows.append(row)
 
     def find(self, pairs: Union[dict, None] = None, none_if_not_found=False, **kwargs) -> Union[List[Row], None]:
         result = []
@@ -703,7 +692,7 @@ class Dataset:
 
         sheet: Worksheet
         for sheet in self.workbook.worksheets:
-            if sheet.max_row == 1 and self._is_all_none(sheet.rows.__next__()):
+            if sheet.max_row == 1 and self._is_all_none(sheet.rows):
                 continue
             self.sheets.append(Sheet(self.suppress_warning, sheet))
         # self.workbook.close()
@@ -860,30 +849,10 @@ class Dataset:
                         if h in tbl.fields:
                             headers_to_merge.remove(h)
                     tbl.fields.extend(headers_to_merge)
-                self._merge_table(sheet, tbl)
+                tbl.merge_sheet(Sheet(self.suppress_warning, sheet), force)
             else:
-                tbl = Sheet(self.suppress_warning, sheet.title)
-                try:
-                    headers = sheet.rows.__next__()
-                except IndexError:
-                    raise ValueError('File has no headers')
-                for h in headers:
-                    tbl.fields.append(h.value)
-                self._merge_table(sheet, tbl)
+                tbl = Sheet(self.suppress_warning, sheet)
                 self.sheets.append(tbl)
-
-    def _merge_table(self, sheet: Worksheet, new_sheet):
-        flg_first_row = True
-        for row in sheet.rows:
-            # Skip header
-            if flg_first_row:
-                flg_first_row = False
-                continue
-
-            new_row = []
-            for cell in row:
-                new_row.append(cell.value)
-            new_sheet.append_row(new_row)
 
     def split_sheets_to_file(self):
         for s in self.sheets:
