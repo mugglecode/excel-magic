@@ -13,10 +13,9 @@ from PIL import Image
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Worksheet
 import openpyxl.cell
+from excel_magic2.Exceptions import EmptySheetException, PredictionException
 
 __all__ = ['Dataset', 'open_file']
-
-from Exceptions import EmptySheetException, PredictionException
 
 
 class Pointer:
