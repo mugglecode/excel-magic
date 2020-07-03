@@ -363,7 +363,7 @@ class Sheet:
                             if len(head_rows) != 0:
                                 if isinstance(head_rows[row_counter - 1][col_counter], MergedCell):
                                     head_rows[row_counter - 1][col_counter].end_row = row_counter - 1
-                                head_row.append(Cell(cell.value))
+                            head_row.append(Cell(cell.value))
                     else:
                         if current_merged_cell is not None:
                             current_merged_cell.end_col = col_counter - 1
@@ -371,7 +371,7 @@ class Sheet:
                         if len(head_rows) != 0:
                             if isinstance(head_rows[row_counter - 1][col_counter], MergedCell):
                                 head_rows[row_counter - 1][col_counter].end_row = row_counter - 1
-                            head_row.append(Cell(cell.value))
+                        head_row.append(Cell(cell.value))
 
                 # if it is a merged cell
                 elif isinstance(cell, openpyxl.cell.MergedCell):
