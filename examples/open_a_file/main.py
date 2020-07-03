@@ -1,4 +1,4 @@
-from excel_magic.dataset import Dataset,open_file
+from excel_magic2.dataset import Dataset,open_file
 
 ex_1 = open_file(path="example.xlsx")
 ex_1.save()

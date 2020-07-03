@@ -1,4 +1,4 @@
-from excel_magic.dataset import Dataset
+from excel_magic2.dataset import Dataset
 
 ex = Dataset(path="haha.xlsx")
 ex.add_sheet("sheeeet5",fields=["products","price"])

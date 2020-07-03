@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 
-from excel_magic.dataset import Sheet, Row
+from excel_magic2.dataset import Sheet, Row
 
 
 class DiffSet:

@@ -1,4 +1,4 @@
-from excel_magic.dataset import Dataset
+from excel_magic2.dataset import Dataset
 
 with Dataset(path="example.xlsx") as ex:
     sh = ex.get_sheet_by_name("sheet1")

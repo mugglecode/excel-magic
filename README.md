@@ -18,7 +18,7 @@ pip install excelmagic
 ### Opening an Excel file
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 file = open_file('test.xlsx')
 ```
@@ -26,7 +26,7 @@ file = open_file('test.xlsx')
 Also supports **with** statement:
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 with open_file('test.xlsx') as file:
         pass
@@ -45,7 +45,7 @@ Example data:
 Query rows of a sheet in an excel file with **specific cell value**:
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 with open_file('test.xlsx') as excel:
     # select a sheet by index or sheet name
@@ -57,7 +57,7 @@ with open_file('test.xlsx') as excel:
 Or query rows with **callback function**:
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 def score_over_90(rows):
     if rows['Score'].value > 90:
@@ -88,7 +88,7 @@ score_num = cell.value
 Split multiple sheets of excel file to independent excel files.
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 file = open_file('test.xlsx')
 file.split_sheets_to_files()
@@ -99,7 +99,7 @@ file.split_sheets_to_files()
 Combine sheets from files into a new excel file.
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 excel_files = ['01.xlsx', '02.xlsx', '03.xlsx']
 
@@ -112,7 +112,7 @@ new_excel.save()
 Or
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 excel_files = ['01.xlsx', '02.xlsx', '03.xlsx']
 
@@ -136,7 +136,7 @@ And excelmagic provides similar hierarchical object API:
 **Example:**
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 dataset = open_file('test.xlsx')
 ```
@@ -185,7 +185,7 @@ Others
 **Example:**
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 dataset = open_file('test.xlsx')
 sheet = dataset.get_sheet_by_index(0)
@@ -244,7 +244,7 @@ Others:
 **Example:**
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 dataset = open_file('test.xlsx')
 sheet = dataset.get_sheet_by_index(0)
@@ -274,7 +274,7 @@ Delete cell
 **Example:**
 
 ```python
-from excel_magic.dataset import open_file
+from excel_magic2.dataset import open_file
 
 dataset = open_file('test.xlsx')
 sheet = dataset.get_sheet_by_index(0)
@@ -300,7 +300,7 @@ Create the style object for cells.
 **Example:**
 
 ```python
-from excel_magic.dataset import Style
+from excel_magic2.dataset import Style
 
 my_style = Style()
 my_style.fill_color = '#52de97'
