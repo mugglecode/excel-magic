@@ -697,8 +697,8 @@ class Dataset:
 
         sheet: Worksheet
         for sheet in self.workbook.worksheets:
-            if sheet.max_row == 0:
-                raise EmptySheetException
+            if sheet.max_row == 1:
+                continue
             self.sheets.append(Sheet(self.suppress_warning, sheet))
         # self.workbook.close()
 

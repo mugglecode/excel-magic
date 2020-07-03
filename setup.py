@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
         name='excelmagic2',
-        version='2.0.6',
+        version='2.0.7',
         packages=setuptools.find_packages(),
         url='https://github.com/mugglecode/excel-magic/tree/2.0',
         license='MIT',
