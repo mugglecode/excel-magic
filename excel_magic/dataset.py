@@ -833,7 +833,7 @@ class Dataset:
                                 sheet.set_column(pointer.col, pointer.col, (col_width / 8))
                             else:
                                 sheet.set_column(pointer.col, pointer.col, (width / 8))
-
+                            sheet.write(pointer.row, pointer.col, '', workbook.add_format(data.attr()))
                         elif isinstance(data, FormulaCell):
                             sheet.write_formula(pointer.row, pointer.col, data.formula,
                                                 workbook.add_format(data.attr()))
